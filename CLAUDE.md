@@ -12,13 +12,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 /                     ルート目次ページ（各回へのリンク）
   index.html
   lec02/              第2回 — 式で世界を動かす
-    index.html
-    情報数理入門_第2回.pdf
-    情報数理入門_第2回.xlsx
+    index.html        対話型 web スライド (本体)
+    情報数理入門_第2回.pdf    配布/印刷用スライド (将来 pptx に置き換え予定)
+    情報数理入門_第2回.xlsx   演習ワークブック
   lecNN/              （今後の回。同じ構造で追加）
 ```
 
 各回は完全に独立した `lecNN/index.html` 1 枚で完結する（共通モジュールは持たない）。新しい回を作る時は既存の `lec02/index.html` をコピーして開始するのが最短。ルートの `index.html` は単なる目次なので、回を追加したら `.lec-list` にカードを 1 つ足す。
+
+## 新しい回を作る時のルール — 必ず守る
+
+**この順番・段階で進める。同時並行や順序入れ替えは禁止。** 詳細は `.claude/skills/new-lecture/SKILL.md` を参照。
+
+1. **HTML (`lecNN/index.html`) を最初に作る** — テーマと参考資料 (web/画像/URL) を取り込み、`lec02/index.html` をコピーしてベースにする。これが講義の本体・真実の源 (source of truth)
+2. **ユーザー確認** — HTML が完成したら必ず停止し、ユーザーに「OK か / 修正点があるか」を聞く。承認なしに次へ進まない
+3. **Excel (`lecNN/情報数理入門_第N回.xlsx`) を作る** — HTML の内容と必ずタイアップさせる (PART 構成・お題・数式を一致させる)。HTML の例題より一段レベルアップした演習問題を含める
+4. **再度ユーザー確認** — Excel 完成後も停止し、確認をもらう
+5. **PPTX (`lecNN/情報数理入門_第N回.pptx`) は要求があった時のみ作る** — ユーザーから「pptx も作って」など明示的に頼まれない限り着手しない。聞かれてないのに作らない
+
+参考資料の取り込み方:
+- 参考 URL → WebFetch / WebSearch
+- 既存 PDF / 画像 / pptx → Read
+- 教科書・シラバス指定 → ユーザーに確認
 
 ## ビルドと実行
 
