@@ -1,0 +1,4167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>情報数理入門 第5回 — 周期と、波</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,600;1,9..144,800&family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@300;400;500;700;900&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #FAFBFC; --surface: #FFFFFF; --surface-2: #F6F7F9; --surface-3: #EFF1F4;
+    --ink: #1F2937; --ink-2: #4B5563; --ink-3: #9CA3AF;
+    --line: #E5E7EB; --line-strong: #D1D5DB;
+    --blue: #2563EB; --blue-dark: #1D4ED8; --blue-deep: #1E3A8A;
+    --blue-bg: #EFF6FF; --blue-bg-2: #DBEAFE; --sky: #93C5FD;
+    --amber: #F59E0B; --amber-bg: #FFFBEB;
+    --rose: #E11D48; --rose-bg: #FFF1F2;
+    --emerald: #059669; --emerald-bg: #ECFDF5;
+    --purple: #7C3AED; --purple-bg: #F5F3FF;
+    --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+    --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 4px 6px rgba(15, 23, 42, 0.05), 0 20px 40px rgba(15, 23, 42, 0.08);
+    --font-jp: "Zen Kaku Gothic New", sans-serif;
+    --font-serif: "DM Serif Display", "Zen Kaku Gothic New", serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: var(--font-jp); background: var(--bg); color: var(--ink); line-height: 1.7; font-feature-settings: "palt"; -webkit-font-smoothing: antialiased; font-weight: 400; }
+
+  /* LAYOUT */
+  .shell { display: grid; grid-template-columns: 280px 1fr; height: 100vh; overflow: hidden; }
+  .sidebar { height: 100vh; background: var(--surface-2); border-right: 1px solid var(--line); padding: 32px 20px; overflow-y: auto; }
+  .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 6px 10px; margin-bottom: 28px; }
+  .sidebar-brand .mark { width: 28px; height: 28px; background: linear-gradient(135deg, var(--blue) 0%, var(--blue-deep) 100%); border-radius: 7px; display: grid; place-items: center; color: white; font-family: var(--font-serif); font-size: 18px; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35); }
+  .sidebar-brand .title { font-weight: 700; font-size: 14px; color: var(--ink); }
+  .sidebar-brand .sub { font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; }
+  .nav-group { margin-bottom: 24px; }
+  .nav-group-label { font-size: 11px; color: var(--ink-3); font-weight: 500; letter-spacing: 0.08em; padding: 6px 10px; margin-bottom: 4px; text-transform: uppercase; }
+  .nav-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); color: var(--ink-2); font-size: 15px; text-decoration: none; cursor: pointer; transition: all 0.12s ease; font-weight: 500; }
+  .nav-link:hover { background: var(--surface-3); color: var(--ink); }
+  .nav-link.active { background: var(--blue-bg); color: var(--blue-dark); }
+  .nav-link .icon { width: 18px; height: 18px; display: grid; place-items: center; color: var(--ink-3); flex-shrink: 0; }
+  .nav-link.active .icon { color: var(--blue); }
+  .nav-link .sub-num { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); opacity: 0.8; }
+  .nav-link.active .sub-num { color: var(--blue); }
+
+  .main { position: relative; height: 100vh; overflow: hidden; }
+  .slide-deck { position: relative; height: 100%; width: 100%; }
+  .slide { position: absolute; inset: 0; padding: 56px 72px 88px; overflow-y: auto; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.25s ease; }
+  .slide.active { opacity: 1; visibility: visible; pointer-events: auto; }
+  .slide-inner { max-width: 1280px; width: 100%; margin: 0 auto; }
+  .slide-inner .section-sub { max-width: none; font-size: 24px; line-height: 1.85; margin-bottom: 32px; color: var(--ink-2); }
+  .slide-inner h1 { font-size: 88px; }
+  .slide-inner h2 { font-size: 60px; margin-top: 8px; margin-bottom: 20px; line-height: 1.22; letter-spacing: -0.02em; }
+  .slide-inner .eyebrow { font-size: 16px; letter-spacing: 0.16em; margin-bottom: 16px; font-weight: 600; }
+  .slide-inner .block { padding: 40px; }
+  .slide-inner .control-label { font-size: 18px; }
+  .slide-inner .control-value { font-size: 22px; }
+  .slide-inner .stat { padding: 24px 28px; }
+  .slide-inner .stat-label { font-size: 14px; margin-bottom: 10px; letter-spacing: 0.06em; }
+  .slide-inner .stat-value { font-size: 48px; }
+  .slide-inner .stat-unit { font-size: 18px; }
+  .slide-inner .callout { padding: 24px 28px; margin: 20px 0; }
+  .slide-inner .callout .body { font-size: 20px; line-height: 1.85; }
+  .slide-inner .equation { font-size: 28px; padding: 26px 32px; }
+  .slide-inner .equation.light { font-size: 28px; }
+  .slide-inner .principle-card { padding: 28px 32px; margin-bottom: 14px; grid-template-columns: 88px 60px 1fr; gap: 24px; }
+  .slide-inner .principle-card .num { font-size: 64px; }
+  .slide-inner .principle-card h4 { font-size: 24px; margin-bottom: 8px; }
+  .slide-inner .principle-card p { font-size: 18px; line-height: 1.75; }
+  .slide.gate, .slide.title-cover { display: flex; align-items: center; justify-content: center; }
+
+  /* TITLE COVER */
+  .title-cover { background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 60%, #1D4ED8 100%); color: white; }
+  .title-cover .cover-meta { font-size: 15px; letter-spacing: 0.18em; text-transform: uppercase; color: #93C5FD; font-weight: 500; margin-bottom: 28px; }
+  .title-cover .cover-title { font-family: var(--font-jp); font-weight: 900; font-size: 34px; line-height: 1.3; color: #DBEAFE; margin-bottom: 8px; }
+  .title-cover .cover-num { font-family: var(--font-serif); font-size: 104px; line-height: 1; font-weight: 400; color: white; margin-bottom: 36px; }
+  .title-cover .cover-sub { font-family: var(--font-jp); font-weight: 900; font-size: 88px; line-height: 1.15; color: white; letter-spacing: -0.02em; margin-bottom: 56px; }
+  .title-cover .cover-author { font-size: 20px; color: #CBD5E1; letter-spacing: 0.08em; }
+
+  /* GATE */
+  .slide.gate { background: var(--ink); color: white; }
+  .gate-inner { width: 100%; max-width: 1100px; text-align: left; padding: 0 8px; }
+  .gate-part-num { font-family: var(--font-mono); font-size: 16px; letter-spacing: 0.34em; color: #93C5FD; margin-bottom: 28px; font-weight: 500; }
+  .gate-title { font-family: var(--font-jp); font-weight: 900; font-size: 110px; line-height: 1.1; letter-spacing: -0.02em; color: white; margin-bottom: 28px; }
+  .gate-sub { font-size: 24px; color: #CBD5E1; max-width: 50ch; line-height: 1.7; }
+  .gate-accent { color: #60A5FA; }
+  .gate-accent.amber { color: #FCD34D; }
+  .gate-accent.purple { color: #C4B5FD; }
+  .gate-accent.emerald { color: #6EE7B7; }
+  .gate-accent.rose { color: #FDA4AF; }
+  .gate-icon { width: 88px; height: 88px; margin-bottom: 22px; opacity: 0.92; }
+  .gate-icon svg { width: 100%; height: 100%; display: block; }
+
+  /* STORY BLOCKS */
+  .story-block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 44px 48px; margin: 24px 0; box-shadow: var(--shadow-sm); }
+  .story-label { font-size: 16px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin-bottom: 20px; }
+  .story-text { font-size: 28px; line-height: 1.9; color: var(--ink); }
+  .story-text strong { color: var(--blue-dark); font-weight: 700; }
+  .story-q { font-size: 38px; font-weight: 900; color: var(--ink); margin-top: 32px; line-height: 1.4; }
+  .story-q em { color: var(--blue-dark); font-style: normal; }
+  .story-hero { display: grid; grid-template-columns: 96px 1fr; gap: 22px; align-items: center; margin-bottom: 18px; padding: 18px 24px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-md); }
+  .story-hero .sh-icon { width: 96px; height: 96px; }
+  .story-hero .sh-icon svg { width: 100%; height: 100%; display: block; }
+  .story-hero .sh-text .sh-tag { font-size: 11px; color: var(--ink-3); letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+  .story-hero .sh-text .sh-title { font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 4px; line-height: 1.3; }
+  .story-hero .sh-text .sh-sub { font-size: 14px; color: var(--ink-2); line-height: 1.6; }
+
+  /* GEMINI HINT BOX (新規・周期性が分かりにくい時の補助説明) */
+  .gemini-box { margin-top: 24px; padding: 24px 28px; background: #FFFBEB; border: 1px solid #FDE68A; border-left: 6px solid #F59E0B; border-radius: var(--radius-lg); }
+  .gemini-box .gb-head { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: #B45309; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+  .gemini-box .gb-head::before { content: "✦"; font-size: 18px; color: #F59E0B; }
+  .gemini-box .gb-title { font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+  .gemini-box .gb-body { font-size: 16px; color: var(--ink-2); line-height: 1.85; }
+  .gemini-box .gb-body strong { color: #B45309; }
+  .gemini-box .gb-prompt { margin-top: 14px; padding: 14px 18px; background: white; border: 1px dashed #FDE68A; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 13px; color: var(--ink); line-height: 1.7; white-space: pre-wrap; }
+
+  /* SUBMIT TASK BOX (最後の提出課題専用) */
+  .submit-box { margin-top: 28px; padding: 32px 36px; background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%); border: 2px solid var(--purple); border-radius: var(--radius-lg); box-shadow: 0 8px 24px rgba(124, 58, 237, 0.15); }
+  .submit-box .sb-head { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: var(--purple); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px; }
+  .submit-box .sb-head::before { content: "▶"; font-size: 16px; }
+  .submit-box .sb-title { font-size: 32px; font-weight: 900; color: var(--ink); margin-bottom: 16px; letter-spacing: -0.01em; }
+  .submit-box .sb-body { font-size: 17px; color: var(--ink-2); line-height: 1.85; margin-bottom: 18px; }
+  .submit-box .sb-body strong { color: var(--purple); }
+  .submit-box .sb-steps { display: grid; gap: 14px; margin-top: 18px; }
+  .submit-box .sb-step { display: grid; grid-template-columns: 40px 1fr; gap: 16px; align-items: start; padding: 16px 20px; background: white; border-radius: var(--radius-md); border: 1px solid #DDD6FE; }
+  .submit-box .sb-step .sn { width: 36px; height: 36px; background: var(--purple); color: white; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-mono); font-size: 15px; font-weight: 700; }
+  .submit-box .sb-step .desc { font-size: 15px; color: var(--ink); line-height: 1.75; }
+  .submit-box .sb-step .desc code { font-family: var(--font-mono); font-size: 13px; background: #0F172A; color: #C4B5FD; padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+  .submit-box .sb-prompt { margin-top: 14px; padding: 18px 22px; background: #0F172A; color: #E0E7FF; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 13px; line-height: 1.85; white-space: pre-wrap; overflow-x: auto; }
+  .submit-box .sb-prompt .pkw { color: #FCD34D; font-weight: 600; }
+  .submit-box .sb-note { margin-top: 16px; padding: 14px 18px; background: #FFFBEB; border-left: 4px solid var(--amber); border-radius: var(--radius-sm); font-size: 14px; color: #B45309; line-height: 1.7; }
+
+  /* ANIM CANVAS WRAPPER */
+  .anim-wrap { position: relative; padding: 12px; background: white; border-radius: var(--radius-md); border: 1px solid var(--line); height: 360px; box-sizing: border-box; }
+  .anim-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
+
+  /* AUDIO BUTTON */
+  /* audio-btn は EDITORIAL REDESIGN セクションで再定義済み(:before の絵文字を廃止) */
+
+  /* SLIDE NAV */
+  .slide-nav { position: fixed; bottom: 20px; right: 24px; display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 100px; padding: 6px 10px; box-shadow: var(--shadow); z-index: 40; font-family: var(--font-mono); font-size: 12px; }
+  .slide-nav button { width: 32px; height: 32px; display: grid; place-items: center; border: none; background: transparent; color: var(--ink-2); cursor: pointer; border-radius: 50%; font-size: 18px; line-height: 1; transition: all 0.12s; }
+  .slide-nav button:hover:not(:disabled) { background: var(--blue-bg); color: var(--blue-dark); }
+  .slide-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+  .slide-counter { min-width: 54px; text-align: center; color: var(--ink-2); font-weight: 500; letter-spacing: 0.04em; }
+  .slide-counter .sep { color: var(--ink-3); margin: 0 2px; }
+
+  /* MOBILE MENU */
+  .menu-btn { display: none; position: fixed; top: 14px; left: 14px; width: 40px; height: 40px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); cursor: pointer; z-index: 50; align-items: center; justify-content: center; font-size: 18px; color: var(--ink); }
+  .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.35); z-index: 45; }
+  .sidebar-backdrop.open { display: block; }
+
+  /* TYPOGRAPHY */
+  .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; margin-bottom: 12px; }
+  h1 { font-family: var(--font-jp); font-weight: 900; font-size: 56px; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 16px; color: var(--ink); }
+  h2 { font-family: var(--font-jp); font-weight: 900; font-size: 36px; line-height: 1.25; letter-spacing: -0.015em; margin-top: 64px; margin-bottom: 8px; }
+  p { color: var(--ink-2); }
+
+  /* TOC BAR */
+  .tocbar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--line); border-radius: var(--radius-md); overflow: hidden; margin-top: 48px; border: 1px solid var(--line); }
+  .toc-item { background: var(--surface); padding: 24px 18px; text-decoration: none; color: var(--ink); transition: all 0.15s; cursor: pointer; }
+  .toc-item:hover { background: var(--blue-bg); }
+  .toc-item .toc-icon { width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.85; }
+  .toc-item .toc-icon svg { width: 100%; height: 100%; display: block; }
+  .toc-item .toc-num { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.06em; }
+  .toc-item .toc-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .toc-item .toc-hint { font-size: 12px; color: var(--ink-3); margin-top: 4px; line-height: 1.5; }
+
+  /* BLOCKS */
+  .block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+
+  .callout { display: flex; gap: 14px; padding: 16px 18px; margin: 16px 0; background: var(--blue-bg); border-radius: var(--radius-md); border-left: 3px solid var(--blue); }
+  .callout.amber { background: var(--amber-bg); border-left-color: var(--amber); }
+  .callout.rose  { background: var(--rose-bg); border-left-color: var(--rose); }
+  .callout.purple{ background: var(--purple-bg); border-left-color: var(--purple); }
+  .callout.emerald { background: var(--emerald-bg); border-left-color: var(--emerald); }
+  .callout .ico { width: 20px; height: 20px; flex-shrink: 0; color: var(--blue); margin-top: 3px; }
+  .callout.amber .ico { color: var(--amber); }
+  .callout.rose .ico  { color: var(--rose); }
+  .callout.purple .ico{ color: var(--purple); }
+  .callout.emerald .ico { color: var(--emerald); }
+  .callout .body { font-size: 16px; color: var(--ink-2); }
+  .callout strong { color: var(--ink); font-weight: 700; }
+
+  /* CONTROLS */
+  .controls { display: grid; gap: 20px; margin-bottom: 24px; }
+  .controls.grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .controls.grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .control-row { display: flex; flex-direction: column; gap: 8px; }
+  .control-label { display: flex; align-items: baseline; justify-content: space-between; font-size: 13px; color: var(--ink-2); font-weight: 500; }
+  .control-value { font-family: var(--font-mono); font-size: 15px; color: var(--blue-dark); font-weight: 700; }
+  input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: var(--line); border-radius: 100px; outline: none; cursor: pointer; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: white; border: 2px solid var(--blue); box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35); cursor: grab; transition: transform 0.1s; }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: white; border: 2px solid var(--blue); box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35); cursor: grab; }
+
+  /* STATS */
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 16px; }
+  .stat.primary { background: var(--ink); color: white; border-color: var(--ink); }
+  .stat.accent  { background: var(--blue-bg); border-color: var(--blue-bg-2); }
+  .stat.amber   { background: var(--amber-bg); border-color: #FDE68A; }
+  .stat.rose    { background: var(--rose-bg); border-color: #FECDD3; }
+  .stat.purple  { background: var(--purple-bg); border-color: #DDD6FE; }
+  .stat-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; font-weight: 500; }
+  .stat.primary .stat-label { color: rgba(255,255,255,0.6); }
+  .stat-value { font-family: var(--font-serif); font-size: 32px; line-height: 1.1; color: var(--ink); font-weight: 400; }
+  .stat.primary .stat-value { color: white; }
+  .stat.accent  .stat-value { color: var(--blue-dark); }
+  .stat.amber   .stat-value { color: #B45309; }
+  .stat.rose    .stat-value { color: #BE123C; }
+  .stat.purple  .stat-value { color: var(--purple); }
+  .stat-unit { font-size: 14px; color: var(--ink-3); margin-left: 4px; font-family: var(--font-jp); font-weight: 500; }
+  .stat.primary .stat-unit { color: rgba(255,255,255,0.5); }
+
+  /* CHART */
+  .chart-wrap { position: relative; padding: 12px 8px 8px; background: white; border-radius: var(--radius-md); border: 1px solid var(--line); height: 340px; box-sizing: border-box; }
+  .chart-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
+
+  /* EQUATION */
+  .equation { font-family: var(--font-mono); font-size: 22px; padding: 20px 24px; margin: 16px 0; background: var(--ink); color: white; border-radius: var(--radius-md); text-align: center; font-weight: 500; letter-spacing: 0.01em; }
+  .equation.light { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+  .equation .var { color: var(--sky); }
+  .equation .op  { color: #A5B4FC; }
+  .equation.light .var { color: var(--blue-dark); font-weight: 700; }
+  .equation.light .op  { color: var(--ink-3); }
+
+  /* TOGGLE GROUP */
+  .toggle-group { display: inline-flex; gap: 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 100px; padding: 4px; }
+  .toggle-btn { font-family: var(--font-mono); font-size: 14px; font-weight: 600; padding: 8px 18px; border: none; background: transparent; color: var(--ink-2); border-radius: 100px; cursor: pointer; transition: all 0.18s; }
+  .toggle-btn:hover { color: var(--ink); }
+  .toggle-btn.active { background: var(--ink); color: white; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12); }
+
+  /* PRESET BUTTON */
+  .preset-btn { transition: box-shadow 0.15s ease, transform 0.1s ease; }
+  .preset-btn:hover { transform: translateY(-1px); }
+  .preset-btn.active-preset { box-shadow: 0 0 0 3px var(--blue), 0 4px 12px rgba(37, 99, 235, 0.25); }
+
+  /* DIVIDERS */
+  .hr-section { display: flex; align-items: center; gap: 14px; margin: 80px 0 36px; color: var(--ink-3); }
+  .hr-section::before, .hr-section::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .hr-section .label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; }
+  footer { margin-top: 80px; padding-top: 32px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 13px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+  /* PRINCIPLE CARD */
+  .principle-card { display: grid; grid-template-columns: 60px 60px 1fr; gap: 20px; padding: 22px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); align-items: start; margin-bottom: 12px; }
+  .principle-card .num { font-family: var(--font-serif); font-size: 44px; color: var(--blue-bg-2); line-height: 1; font-weight: 400; }
+  .principle-card .principle-icon { width: 60px; height: 60px; margin-top: 4px; }
+  .principle-card .principle-icon svg { width: 100%; height: 100%; display: block; }
+  .principle-card .content h4 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .principle-card .content p { font-size: 15px; color: var(--ink-2); line-height: 1.7; }
+
+  /* FLOW DIAGRAM */
+  .flow-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 28px 32px; margin: 24px 0 32px; }
+  .flow-card .flow-label { font-size: 12px; letter-spacing: 0.14em; color: var(--ink-3); text-transform: uppercase; font-weight: 600; margin-bottom: 16px; }
+  .flow-card svg { width: 100%; height: auto; display: block; }
+
+  /* ====================== PRACTICES-STYLE REDESIGN(青基調・Fraunces 編集系) ====================== */
+  :root {
+    /* Background — cool blue-white */
+    --paper: #F4F8FC;
+    --paper-2: #FAFCFF;
+    --paper-3: #E8F0F9;
+    --bg-card: #FFFFFF;
+    /* Ink — deep navy */
+    --ink: #1A2B47;
+    --ink-2: #475673;
+    --ink-3: #75839B;
+    --ink-4: #B0BAC9;
+    /* Action: medium blue (CTA・リンク) */
+    --action: #4A78C8;
+    --action-deep: #2E5894;
+    --action-pale: #DAE6F5;
+    --action-pale2: #B8CDE6;
+    /* Anchor: deep navy (見出し・締めの色) */
+    --anchor: #122E55;
+    --anchor-mid: #2A4A78;
+    --anchor-pale: #DDE7F2;
+    /* Gold: warm amber accent(ハイライト一点) */
+    --gold: #D4A852;
+    --gold-pale: #F5E5BB;
+    --gold-deep: #A37A1F;
+    /* OK / NG (採点用) */
+    --ok: #41A38C;
+    --ok-pale: #C5E2D9;
+    --ng: #C84A60;
+    --ng-pale: #F0D5DB;
+    /* Lines */
+    --hairline: #D8E2EE;
+    --hairline-2: #B8C5D7;
+    --line-soft: #E8EFF7;
+    /* (互換用エイリアス) */
+    --accent: var(--action);
+    --accent-deep: var(--action-deep);
+    --accent-bg: var(--action-pale);
+    --accent-line: var(--hairline-2);
+
+    /* Fonts(practices と同一スタック) */
+    --font-display: 'Fraunces', 'Playfair Display', Georgia, serif;
+    --font-jp-display: 'YuKyokasho Yoko', 'YuKyokasho', '游教科書体 横用', '游教科書体', 'Klee One', 'UD Digi Kyokasho N-R', 'Hiragino Mincho ProN', 'Yu Mincho', '游明朝', serif;
+    --font-body: 'Zen Kaku Gothic New', 'Hiragino Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-la: 'DM Sans', system-ui, sans-serif;
+    --font-num: 'DM Sans', 'Zen Kaku Gothic New', sans-serif;
+
+    --shadow-soft: 0 14px 30px -12px rgba(26, 43, 71, 0.12), 0 2px 8px -2px rgba(26, 43, 71, 0.06);
+    --shadow-key: 0 22px 44px -14px rgba(74, 120, 200, 0.18), 0 4px 12px -2px rgba(26, 43, 71, 0.08);
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 500;
+    line-height: 1.85;
+    letter-spacing: 0.02em;
+    font-feature-settings: 'palt' 1;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* ドット背景(practices と同一) */
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: -1;
+    background-image: radial-gradient(circle at 1px 1px, rgba(26, 43, 71, 0.05) 1px, transparent 0);
+    background-size: 26px 26px;
+    pointer-events: none;
+  }
+
+  /* 大見出し: 英語 italic(Fraunces) + 教科書体(YuKyokasho)の 2 段重ね路線 */
+  h1 { font-family: var(--font-display); font-style: italic; font-weight: 800; letter-spacing: -0.015em; color: var(--ink); }
+  h2 { font-family: var(--font-jp-display); font-weight: 900; letter-spacing: 0.05em; color: var(--anchor); }
+  .slide-inner h1 { font-size: clamp(48px, 6vw, 76px); line-height: 1.05; margin-bottom: 12px; }
+  .slide-inner h2 { font-size: clamp(28px, 3.4vw, 44px); line-height: 1.4; margin-top: 4px; margin-bottom: 22px; }
+  .slide-inner h2 em { font-style: normal; color: var(--action); font-weight: 900; }
+  .slide-inner .section-sub {
+    font-family: var(--font-body); font-weight: 500;
+    font-size: 17px; line-height: 2.0; color: var(--ink-2);
+    margin-bottom: 32px; max-width: 70ch;
+  }
+  p { color: var(--ink-2); font-family: var(--font-body); font-weight: 500; }
+
+  /* eyebrow → スライド見出しの直上は "kicker pill"、 ブロック内では地味なラベル */
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    padding: 0.42rem 0.95rem;
+    background: var(--anchor-pale);
+    color: var(--anchor);
+    border-radius: 999px;
+    font-family: var(--font-la); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  .eyebrow::before { display: none; }
+  /* ブロック内に出てくる eyebrow は控えめに(下線スタイル) */
+  .block .eyebrow {
+    display: flex; align-items: center; gap: 10px;
+    background: transparent;
+    color: var(--action-deep);
+    padding: 0 0 8px 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--hairline);
+    font-family: var(--font-la); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .block .eyebrow::before {
+    content: ""; display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--action);
+  }
+
+  /* インタラクティブブロック: 白カード + 細い線 + 落ち着いた shadow */
+  .block {
+    background: var(--bg-card);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 32px 32px 28px;
+    margin-bottom: 26px;
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: visible;
+  }
+  .block::before { display: none; }
+
+  /* コントロール群: 白カードの上のサブパネル */
+  .controls {
+    background: var(--paper-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin: 4px 0 26px 0;
+    gap: 18px;
+  }
+  .controls::after { display: none; }
+  .controls.grid-2, .controls.grid-3 { grid-template-columns: 1fr; }
+  @media (min-width: 1100px) {
+    .controls.grid-2 { grid-template-columns: repeat(2, 1fr); column-gap: 28px; }
+    .controls.grid-3 { grid-template-columns: repeat(3, 1fr); column-gap: 28px; }
+  }
+  .control-row {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: none;
+  }
+  .control-row:hover, .control-row:focus-within { border-color: transparent; box-shadow: none; }
+  .control-label {
+    font-family: var(--font-la); font-weight: 700;
+    font-size: 11px; letter-spacing: 0.22em; color: var(--ink-mute);
+    text-transform: uppercase;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .control-label > span:first-child { font-family: var(--font-body); font-weight: 600; font-size: 13px; letter-spacing: 0.04em; text-transform: none; color: var(--ink-soft); }
+  .control-value, .slide-inner .control-value {
+    font-family: var(--font-display); font-style: italic; font-weight: 600;
+    font-size: 26px; line-height: 1;
+    color: var(--anchor);
+    letter-spacing: -0.01em;
+  }
+
+  /* スライダー: 青ベース、 action ブルーのつまみ */
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 6px;
+    background: linear-gradient(90deg, var(--action-pale) 0%, var(--action-pale2) 100%);
+    border: none; border-radius: 999px; outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--bg-card);
+    border: 3px solid var(--action);
+    box-shadow: 0 4px 12px -2px rgba(74, 120, 200, 0.4), 0 0 0 0.5px rgba(74, 120, 200, 0.2);
+    cursor: grab; transition: transform 0.12s var(--ease);
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.12); }
+  input[type="range"]::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.05); }
+  input[type="range"]::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--bg-card);
+    border: 3px solid var(--action);
+    box-shadow: 0 4px 12px -2px rgba(74, 120, 200, 0.4);
+    cursor: grab;
+  }
+
+  /* 数式バー: 紺グラデ + Fraunces italic の優雅な表記 */
+  .equation {
+    background: linear-gradient(135deg, var(--anchor) 0%, var(--anchor-mid) 100%);
+    color: white;
+    font-family: var(--font-mono); font-weight: 500;
+    font-size: 21px; padding: 22px 28px;
+    margin: 18px 0;
+    border-radius: 10px;
+    text-align: center; letter-spacing: 0.02em;
+    box-shadow: 0 8px 22px -10px rgba(18, 46, 85, 0.4);
+    overflow: visible;
+  }
+  .equation::before, .equation::after { display: none; }
+  .equation.light {
+    background: var(--paper-2);
+    color: var(--ink);
+    border: 1px solid var(--hairline);
+    box-shadow: none;
+  }
+  .equation .var {
+    background: transparent;
+    color: var(--gold-pale); padding: 0 2px;
+    border-radius: 0;
+    font-weight: 700;
+    font-style: normal;
+  }
+  .equation.light .var { color: var(--action-deep); background: transparent; font-weight: 700; }
+  .equation .op { color: rgba(255,255,255,0.55); }
+  .equation.light .op { color: var(--ink-mute); }
+
+  /* 統計カード */
+  .stat {
+    background: var(--bg-card);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: none;
+    overflow: visible;
+    transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  }
+  .stat:hover { transform: translateY(-1px); box-shadow: var(--shadow-soft); }
+  .stat::after { display: none; }
+  .stat.primary {
+    background: linear-gradient(135deg, var(--anchor) 0%, var(--anchor-mid) 100%);
+    color: white; border-color: var(--anchor);
+    box-shadow: 0 8px 22px -10px rgba(18, 46, 85, 0.45);
+  }
+  .stat.accent {
+    background: var(--action-pale);
+    border-color: var(--action-pale2);
+  }
+  /* 旧 amber / rose / purple → 青系・金系に再マッピング */
+  .stat.amber {
+    background: var(--gold-pale);
+    border-color: rgba(212, 168, 82, 0.35);
+  }
+  .stat.rose {
+    background: var(--ng-pale);
+    border-color: rgba(200, 74, 96, 0.25);
+  }
+  .stat.purple {
+    background: var(--anchor-pale);
+    border-color: var(--action-pale2);
+  }
+  .stat-label {
+    font-family: var(--font-la); font-weight: 700;
+    font-size: 10px; letter-spacing: 0.28em;
+    color: var(--ink-mute); text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .stat.primary .stat-label { color: rgba(255,255,255,0.65); }
+  .stat.accent .stat-label { color: var(--action-deep); }
+  .stat.amber .stat-label { color: var(--gold-deep); }
+  .stat.rose .stat-label { color: #8E3344; }
+  .stat.purple .stat-label { color: var(--anchor); }
+  .stat-value, .slide-inner .stat-value {
+    font-family: var(--font-display); font-style: italic; font-weight: 600;
+    font-size: 30px; line-height: 1.1; color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .stat.primary .stat-value { color: white; }
+  .stat.accent .stat-value { color: var(--action-deep); }
+  .stat.amber .stat-value { color: var(--gold-deep); }
+  .stat.rose .stat-value { color: #8E3344; }
+  .stat.purple .stat-value { color: var(--anchor); }
+  .stat-unit, .slide-inner .stat-unit {
+    font-family: var(--font-body); font-style: normal; font-weight: 500; font-size: 13px;
+    color: var(--ink-mute); margin-left: 4px;
+  }
+  .stat.primary .stat-unit { color: rgba(255,255,255,0.55); }
+
+  /* チャート枠 */
+  .chart-wrap, .anim-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    box-shadow: var(--shadow-soft);
+    padding: 18px 16px;
+    position: relative;
+  }
+  .chart-wrap::before, .anim-wrap::before { display: none !important; content: none !important; }
+
+  /* プリセットボタン: 白カード + 細い線、 ホバーで青 */
+  .preset-btn {
+    background: var(--bg-card);
+    color: var(--ink-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    font-family: var(--font-la);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 10px 18px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.2s var(--ease);
+    box-shadow: 0 1px 2px rgba(26, 43, 71, 0.04);
+  }
+  .preset-btn:hover {
+    border-color: var(--action-pale2);
+    background: var(--action-pale);
+    color: var(--action-deep);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px -6px rgba(74, 120, 200, 0.25);
+  }
+  .preset-btn.active-preset {
+    background: var(--anchor);
+    color: white;
+    border-color: var(--anchor);
+    box-shadow: 0 6px 14px -4px rgba(18, 46, 85, 0.35);
+  }
+
+  /* 主アクション: 紺グラデ pill */
+  .cta-fit {
+    background: linear-gradient(135deg, var(--anchor) 0%, var(--action-deep) 100%);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    font-family: var(--font-la);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 12px 24px;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 22px -8px rgba(18, 46, 85, 0.4);
+    transition: all 0.2s var(--ease);
+  }
+  .cta-fit::before {
+    content: ""; display: inline-block;
+    width: 6px; height: 6px; background: var(--gold); border-radius: 50%;
+  }
+  .cta-fit:hover { transform: translateY(-1px); box-shadow: 0 12px 26px -8px rgba(18, 46, 85, 0.5); }
+
+  .cta-reset {
+    background: var(--bg-card);
+    color: var(--ink-soft);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    font-family: var(--font-la);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 12px 20px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    box-shadow: 0 1px 2px rgba(26, 43, 71, 0.04);
+    transition: all 0.2s var(--ease);
+  }
+  .cta-reset:hover { border-color: var(--action-pale2); background: var(--action-pale); color: var(--action-deep); }
+
+  /* オーディオボタン */
+  .audio-btn {
+    background: linear-gradient(135deg, var(--anchor) 0%, var(--action-deep) 100%);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    font-family: var(--font-la);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 13px 26px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 10px;
+    box-shadow: 0 8px 22px -8px rgba(18, 46, 85, 0.4);
+    transition: all 0.2s var(--ease);
+  }
+  .audio-btn::before {
+    content: ""; width: 7px; height: 7px; background: var(--gold); border-radius: 50%;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .audio-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 26px -8px rgba(18, 46, 85, 0.5); }
+  .audio-btn.playing { background: linear-gradient(135deg, #8E3344 0%, var(--ng) 100%); box-shadow: 0 8px 22px -8px rgba(142, 51, 68, 0.5); }
+  .audio-btn.playing::before { background: white; transform: scale(0.7); border-radius: 2px; }
+
+  /* callout を青/金/緑のニュアンスでまとめる */
+  .callout {
+    display: flex; gap: 14px;
+    padding: 16px 18px;
+    margin: 18px 0;
+    background: var(--action-pale);
+    border: 1px solid var(--action-pale2);
+    border-left: 3px solid var(--action);
+    border-radius: 10px;
+  }
+  .callout.amber {
+    background: var(--gold-pale);
+    border-color: rgba(212, 168, 82, 0.4);
+    border-left-color: var(--gold);
+  }
+  .callout.rose {
+    background: var(--ng-pale);
+    border-color: rgba(200, 74, 96, 0.3);
+    border-left-color: var(--ng);
+  }
+  .callout.purple {
+    background: var(--anchor-pale);
+    border-color: var(--action-pale2);
+    border-left-color: var(--anchor);
+  }
+  .callout.emerald {
+    background: var(--ok-pale);
+    border-color: rgba(65, 163, 140, 0.3);
+    border-left-color: var(--ok);
+  }
+  .callout .ico {
+    width: 18px; height: 18px; flex-shrink: 0; margin-top: 3px;
+    color: var(--action); font-weight: 700;
+  }
+  .callout.amber .ico { color: var(--gold-deep); }
+  .callout.rose .ico { color: #8E3344; }
+  .callout.purple .ico { color: var(--anchor); }
+  .callout.emerald .ico { color: var(--ok); }
+  .callout .body {
+    font-family: var(--font-body); font-weight: 500;
+    font-size: 15px; line-height: 1.85; color: var(--ink-soft);
+  }
+  .callout strong { color: var(--ink); font-weight: 700; }
+
+  /* スライドのレイアウト */
+  .slide { padding: 56px 80px 92px; }
+  .slide-inner { max-width: 1180px; }
+
+  /* サイドバー */
+  .sidebar { background: var(--bg-card); border-right: 1px solid var(--hairline); }
+  .sidebar-brand .mark {
+    background: var(--anchor);
+    border-radius: 8px;
+    font-family: var(--font-display); font-style: italic; font-weight: 800;
+    box-shadow: 0 4px 12px -4px rgba(18, 46, 85, 0.4);
+  }
+  .sidebar-brand .title { font-family: var(--font-display); font-style: italic; font-weight: 700; letter-spacing: -0.01em; }
+  .sidebar-brand .sub { font-family: var(--font-la); font-weight: 700; letter-spacing: 0.28em; font-size: 10px; }
+  .nav-group-label {
+    font-family: var(--font-la); font-weight: 700; font-size: 10px;
+    letter-spacing: 0.28em; color: var(--ink-mute); text-transform: uppercase;
+  }
+  .nav-link { color: var(--ink-soft); font-family: var(--font-body); font-weight: 500; }
+  .nav-link:hover { background: var(--paper-2); color: var(--ink); }
+  .nav-link.active { background: var(--action-pale); color: var(--action-deep); }
+  .nav-link.active .icon, .nav-link.active .sub-num { color: var(--action-deep); }
+  .nav-link .sub-num { font-family: var(--font-mono); }
+
+  /* 表紙: 紺グラデ + Fraunces italic + 教科書体
+     注: .title-cover に position: relative を付けない(.slide の position: absolute を壊すと
+         他のスライドと重なって描画されなくなる) */
+  .title-cover {
+    background: linear-gradient(135deg, #0E2447 0%, var(--anchor) 50%, var(--anchor-mid) 100%);
+    color: white;
+  }
+  .title-cover::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 0);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .title-cover .slide-inner { position: relative; z-index: 1; }
+  .title-cover .cover-meta {
+    font-family: var(--font-la); font-weight: 700;
+    color: var(--gold-pale);
+    letter-spacing: 0.28em; text-transform: uppercase;
+    font-size: 12px; margin-bottom: 32px;
+  }
+  .title-cover .cover-title {
+    font-family: var(--font-jp-display); font-weight: 900;
+    color: rgba(255,255,255,0.85);
+    font-size: 22px; letter-spacing: 0.08em; margin-bottom: 0;
+  }
+  .title-cover .cover-num {
+    font-family: var(--font-display); font-style: italic; font-weight: 800;
+    color: white;
+    font-size: 96px; line-height: 1; margin-top: 2px; margin-bottom: 30px;
+  }
+  .title-cover .cover-sub {
+    font-family: var(--font-jp-display); font-weight: 900;
+    color: white;
+    font-size: clamp(56px, 7vw, 92px);
+    line-height: 1.18; letter-spacing: 0.06em;
+    margin-bottom: 48px;
+  }
+  .title-cover .cover-sub::after {
+    content: ""; display: block;
+    width: 72px; height: 2px;
+    background: var(--gold);
+    margin: 32px auto 0;
+  }
+  .title-cover .cover-author {
+    font-family: var(--font-la); font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.18em; font-size: 14px;
+  }
+
+  /* PART 扉
+     注: .slide.gate も position: relative を付けない(同上) */
+  .slide.gate {
+    background: linear-gradient(135deg, var(--anchor) 0%, var(--anchor-mid) 60%, var(--action-deep) 100%);
+    color: white;
+  }
+  .slide.gate::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+    background-size: 28px 28px; pointer-events: none;
+    z-index: 0;
+  }
+  .gate-inner { position: relative; z-index: 1; }
+  .gate-part-num {
+    font-family: var(--font-la); font-weight: 700;
+    color: var(--gold-pale);
+    letter-spacing: 0.34em; font-size: 12px; text-transform: uppercase;
+  }
+  .gate-title {
+    font-family: var(--font-jp-display); font-weight: 900;
+    color: white;
+    font-size: clamp(56px, 8vw, 104px);
+    line-height: 1.15; letter-spacing: 0.04em;
+  }
+  .gate-sub {
+    color: rgba(255,255,255,0.75);
+    font-family: var(--font-body); font-weight: 500;
+    font-size: 18px; max-width: 54ch; line-height: 1.9;
+  }
+  .gate-accent, .gate-accent.amber, .gate-accent.purple, .gate-accent.emerald, .gate-accent.rose {
+    color: var(--gold-pale);
+    font-style: normal;
+  }
+  .gate-icon { opacity: 0.85; }
+
+  /* TOC バー: 5 カード横並び */
+  .tocbar {
+    grid-template-columns: repeat(5, 1fr);
+    background: transparent; border-radius: 12px;
+    border: none; gap: 12px;
+    overflow: visible;
+  }
+  .toc-item {
+    background: var(--bg-card);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 24px 22px;
+    transition: all 0.25s var(--ease);
+  }
+  .toc-item:hover {
+    background: var(--bg-card);
+    border-color: var(--action-pale2);
+    box-shadow: var(--shadow-card-hover, 0 18px 32px -14px rgba(74, 120, 200, 0.18));
+    transform: translateY(-2px);
+  }
+  .toc-item .toc-num {
+    font-family: var(--font-la); font-weight: 700;
+    color: var(--action); letter-spacing: 0.22em;
+    font-size: 10px; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .toc-item .toc-name {
+    font-family: var(--font-jp-display); font-weight: 900;
+    font-size: 18px; color: var(--anchor);
+    margin: 6px 0; line-height: 1.35; letter-spacing: 0.04em;
+  }
+  .toc-item .toc-hint {
+    font-family: var(--font-body); font-weight: 500;
+    color: var(--ink-mute); font-size: 12px; line-height: 1.6;
+  }
+
+  /* ストーリーブロック */
+  .story-block {
+    background: var(--bg-card);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 36px 40px;
+    box-shadow: var(--shadow-soft);
+  }
+  .story-label {
+    font-family: var(--font-la); font-weight: 700;
+    color: var(--action); letter-spacing: 0.28em;
+    font-size: 11px; text-transform: uppercase;
+  }
+  .story-text {
+    font-family: var(--font-jp-display); font-weight: 600;
+    font-size: 24px; line-height: 1.95;
+    color: var(--ink); letter-spacing: 0.04em;
+  }
+  .story-text strong { color: var(--action-deep); font-weight: 900; }
+  .story-q {
+    font-family: var(--font-jp-display); font-weight: 900;
+    font-size: 28px; line-height: 1.55;
+    color: var(--anchor); margin-top: 28px; letter-spacing: 0.04em;
+  }
+  .story-q em { color: var(--action); font-style: normal; }
+
+  .story-hero {
+    background: var(--paper-2);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+  }
+  .story-hero .sh-tag {
+    font-family: var(--font-la); font-weight: 700;
+    color: var(--action); letter-spacing: 0.22em;
+    text-transform: uppercase; font-size: 10px;
+  }
+  .story-hero .sh-title {
+    font-family: var(--font-jp-display); font-weight: 900;
+    color: var(--anchor); letter-spacing: 0.04em;
+  }
+  .story-hero .sh-sub { color: var(--ink-soft); }
+
+  /* gemini-box: ゴールド系の上品なヒント */
+  .gemini-box {
+    background: var(--gold-pale);
+    border: 1px solid rgba(212, 168, 82, 0.4);
+    border-left: 4px solid var(--gold);
+    border-radius: 12px;
+    padding: 22px 28px;
+  }
+  .gemini-box .gb-head {
+    font-family: var(--font-la); font-weight: 700;
+    color: var(--gold-deep); letter-spacing: 0.22em;
+    text-transform: uppercase; font-size: 11px;
+  }
+  .gemini-box .gb-head::before { content: "✦"; font-size: 13px; }
+  .gemini-box .gb-title {
+    font-family: var(--font-jp-display); font-weight: 900;
+    color: var(--anchor); font-size: 20px; line-height: 1.5; letter-spacing: 0.04em;
+  }
+  .gemini-box .gb-body {
+    font-family: var(--font-body); font-weight: 500;
+    color: var(--ink-soft); font-size: 15px; line-height: 1.85;
+  }
+  .gemini-box .gb-body strong { color: var(--gold-deep); }
+  .gemini-box .gb-prompt {
+    background: var(--bg-card);
+    border: 1px dashed rgba(212, 168, 82, 0.5);
+    border-radius: 8px;
+    font-family: var(--font-mono); font-size: 13px; color: var(--ink);
+  }
+
+  /* submit-box: 紺グラデの課題箱(これは .slide 直下ではないので relative OK) */
+  .submit-box {
+    background: linear-gradient(135deg, var(--anchor) 0%, var(--action-deep) 100%);
+    color: white;
+    border: none;
+    border-radius: 18px;
+    padding: 40px 44px;
+    box-shadow: 0 26px 56px -18px rgba(18, 46, 85, 0.55), 0 6px 16px -4px rgba(74, 120, 200, 0.25);
+    position: relative; overflow: hidden;
+  }
+  .submit-box::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
+    background-size: 28px 28px; pointer-events: none;
+    z-index: 0;
+  }
+  .submit-box > * { position: relative; z-index: 1; }
+  .submit-box .sb-head {
+    font-family: var(--font-la); font-weight: 700;
+    color: var(--gold); letter-spacing: 0.28em;
+    text-transform: uppercase; font-size: 11px;
+  }
+  .submit-box .sb-head::before { content: "—"; }
+  .submit-box .sb-title {
+    font-family: var(--font-jp-display); font-weight: 900;
+    color: white; font-size: clamp(28px, 3.4vw, 38px);
+    line-height: 1.4; letter-spacing: 0.04em;
+  }
+  .submit-box .sb-body {
+    font-family: var(--font-body); font-weight: 500;
+    color: rgba(255,255,255,0.85); font-size: 16px; line-height: 1.95;
+  }
+  .submit-box .sb-body strong { color: var(--gold-pale); font-weight: 700; }
+  .submit-box .sb-step {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 10px;
+    padding: 16px 22px;
+  }
+  .submit-box .sb-step .sn {
+    background: var(--gold); color: var(--anchor);
+    font-family: var(--font-display); font-style: italic; font-weight: 800;
+    font-size: 16px;
+  }
+  .submit-box .sb-step .desc {
+    color: rgba(255,255,255,0.88);
+    font-family: var(--font-body); font-weight: 500;
+  }
+  .submit-box .sb-step .desc code {
+    background: rgba(255,255,255,0.1); color: var(--gold-pale);
+    font-family: var(--font-mono);
+  }
+  .submit-box .sb-prompt {
+    background: rgba(0,0,0,0.35);
+    color: rgba(255,255,255,0.95);
+    font-family: var(--font-mono);
+    border-radius: 10px;
+  }
+  .submit-box .sb-prompt .pkw { color: var(--gold-pale); }
+  .submit-box .sb-note {
+    background: rgba(212, 168, 82, 0.16);
+    border-left: 3px solid var(--gold);
+    color: rgba(255,255,255,0.88);
+    border-radius: 6px;
+  }
+
+  /* principle カード */
+  .principle-card {
+    background: var(--bg-card);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 28px 32px;
+    box-shadow: var(--shadow-soft);
+  }
+  .principle-card .num {
+    font-family: var(--font-display); font-style: italic; font-weight: 800;
+    color: var(--action); font-size: 56px; line-height: 1;
+  }
+  .principle-card .content h4 {
+    font-family: var(--font-jp-display); font-weight: 900;
+    color: var(--anchor); font-size: 20px; letter-spacing: 0.04em;
+  }
+  .principle-card .content p {
+    font-family: var(--font-body); font-weight: 500;
+    color: var(--ink-soft); font-size: 15px; line-height: 1.85;
+  }
+
+  /* スライドナビ */
+  .slide-nav {
+    background: rgba(255,255,255,0.94);
+    border: 1px solid var(--hairline);
+    box-shadow: 0 10px 28px -10px rgba(26, 43, 71, 0.22);
+    padding: 6px 10px; gap: 6px;
+    border-radius: 999px;
+  }
+  .slide-nav button {
+    color: var(--ink-soft); width: 34px; height: 34px;
+    transition: all 0.18s var(--ease);
+  }
+  .slide-nav button:hover:not(:disabled) {
+    background: var(--action-pale); color: var(--action-deep);
+  }
+  .slide-counter {
+    font-family: var(--font-mono); color: var(--ink-soft);
+    font-weight: 700; letter-spacing: 0.06em;
+  }
+  .slide-counter .sep { color: var(--ink-faint); }
+
+  /* メニューボタン(常時表示・サイドバートグル) */
+  .menu-btn {
+    display: inline-flex !important;
+    position: fixed; top: 18px; left: 18px;
+    width: 40px; height: 40px;
+    align-items: center; justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    color: var(--ink-soft);
+    font-family: var(--font-mono); font-size: 18px; font-weight: 700;
+    cursor: pointer; z-index: 70;
+    box-shadow: 0 4px 12px -4px rgba(26, 43, 71, 0.15);
+    transition: all 0.2s var(--ease);
+  }
+  .menu-btn:hover { border-color: var(--action-pale2); background: var(--action-pale); color: var(--action-deep); }
+  .menu-btn[aria-expanded="true"] { background: var(--anchor); color: white; border-color: var(--anchor); }
+
+  /* デスクトップでサイドバーを畳む */
+  .shell { transition: grid-template-columns 0.32s var(--ease); }
+  .sidebar { overflow: hidden; transition: opacity 0.32s var(--ease), transform 0.32s var(--ease); }
+  .shell.sidebar-collapsed { grid-template-columns: 0 1fr; }
+  .shell.sidebar-collapsed .sidebar { opacity: 0; transform: translateX(-12px); pointer-events: none; }
+
+  /* デフォルトでサイドバー内に位置調整: menu-btn が中に入ったとき気持ち良く見えるよう、 開いてるとき左 296px に下げる */
+  @media (min-width: 901px) {
+    .menu-btn { left: 232px; transition: left 0.32s var(--ease), all 0.2s var(--ease); }
+    .shell.sidebar-collapsed ~ .menu-btn, body:has(.shell.sidebar-collapsed) .menu-btn { left: 18px; }
+  }
+
+  /* 数式内の各種要素を強調 */
+  .slide-inner .equation { font-size: 22px; padding: 22px 28px; }
+  .slide-inner .equation.light { font-size: 22px; }
+
+  /* 印刷時 */
+  @media print {
+    body { background: white !important; }
+    body::before, .title-cover::before, .slide.gate::before, .submit-box::before { display: none !important; }
+    .equation, .stat.primary, .submit-box, .slide.gate, .title-cover { background: #122E55 !important; color: white !important; }
+    .audio-btn, .cta-fit { background: #122E55 !important; color: white !important; }
+  }
+
+  /* ====================== ENHANCED INTERACTIVE DESIGN(リッチ化) ====================== */
+  /* インタラクティブブロック全体: 上部レインボー帯 + 多層シャドウ + グラデ背景 */
+  .block {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+    border: 1px solid #E5E7EB;
+    border-radius: 22px;
+    padding: 44px 38px 38px;
+    margin-bottom: 28px;
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 12px 32px rgba(15, 23, 42, 0.07),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    position: relative;
+    overflow: hidden;
+  }
+  .block::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--purple) 35%, var(--rose) 65%, var(--amber) 100%);
+  }
+
+  /* コントロール群: ダッシュボード風カード */
+  .controls {
+    background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 22px 24px;
+    margin-bottom: 24px;
+    gap: 16px;
+    position: relative;
+  }
+  .controls::after {
+    content: "CONTROLS";
+    position: absolute; top: 10px; right: 16px;
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--ink-3); letter-spacing: 0.22em; font-weight: 700; opacity: 0.55;
+  }
+  .control-row {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 14px 18px 16px;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .control-row:hover { border-color: #BFDBFE; box-shadow: 0 2px 10px rgba(37, 99, 235, 0.08); }
+  .control-row:focus-within { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12), 0 4px 14px rgba(37, 99, 235, 0.12); }
+  .control-label {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--ink-2); text-transform: none;
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 0;
+  }
+  .slide-inner .control-label { font-size: 14px; }
+  .control-value {
+    font-family: var(--font-serif); font-size: 26px; line-height: 1;
+    color: var(--blue-dark); font-weight: 400; letter-spacing: 0;
+  }
+  .slide-inner .control-value { font-size: 28px; }
+
+  /* スライダーをモダンに */
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 8px;
+    background: linear-gradient(90deg, #DBEAFE 0%, #93C5FD 100%);
+    border: 1px solid #BFDBFE;
+    border-radius: 100px; outline: none; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: white; border: 3px solid var(--blue);
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.08), 0 6px 16px rgba(37, 99, 235, 0.35);
+    cursor: grab; transition: transform 0.12s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.14); }
+  input[type="range"]::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.08); }
+  input[type="range"]::-moz-range-thumb {
+    width: 24px; height: 24px; border-radius: 50%; background: white;
+    border: 3px solid var(--blue);
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.08), 0 6px 16px rgba(37, 99, 235, 0.35);
+    cursor: grab;
+  }
+
+  /* 数式バーリッチ化 */
+  .equation {
+    background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 60%, #312E81 100%);
+    color: white;
+    font-family: var(--font-mono); font-size: 24px;
+    padding: 28px 32px 26px; margin: 20px 0;
+    border-radius: 14px;
+    text-align: center; font-weight: 500; letter-spacing: 0.02em;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    position: relative; overflow: hidden;
+  }
+  .equation::after {
+    content: "EQUATION"; position: absolute; top: 12px; right: 18px;
+    font-family: var(--font-mono); font-size: 9px;
+    color: rgba(255, 255, 255, 0.32); letter-spacing: 0.22em; font-weight: 700;
+  }
+  .equation.light {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F1F5F9 100%);
+    color: var(--ink); border: 1px solid #E2E8F0;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  }
+  .equation.light::after { color: var(--ink-3); opacity: 0.55; }
+  .equation .var {
+    display: inline-block; padding: 3px 10px; margin: 0 2px;
+    background: rgba(147, 197, 253, 0.2); border-radius: 6px; color: #BFDBFE;
+  }
+  .equation.light .var {
+    background: rgba(29, 78, 216, 0.1); color: var(--blue-dark); font-weight: 700;
+  }
+  .equation .op { color: #C4B5FD; }
+  .equation.light .op { color: var(--ink-3); }
+
+  /* Stat カードリッチ化 */
+  .stat {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+    border: 1px solid #E5E7EB; border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 4px 12px rgba(15, 23, 42, 0.05);
+    position: relative; overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .stat:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 8px 22px rgba(15, 23, 42, 0.08); }
+  .stat::after {
+    content: ""; position: absolute; top: -10px; right: -10px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle at top right, currentColor, transparent 60%);
+    opacity: 0.07; pointer-events: none;
+  }
+  .stat.primary {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    color: white; border-color: #0F172A;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.3);
+  }
+  .stat.primary::after { color: var(--sky); opacity: 0.18; }
+  .stat.accent {
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    border-color: #BFDBFE; color: var(--blue-dark);
+  }
+  .stat.amber {
+    background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+    border-color: #FDE68A; color: #B45309;
+  }
+  .stat.rose {
+    background: linear-gradient(135deg, #FFF1F2 0%, #FECDD3 100%);
+    border-color: #FECDD3; color: #BE123C;
+  }
+  .stat.purple {
+    background: linear-gradient(135deg, #F5F3FF 0%, #DDD6FE 100%);
+    border-color: #DDD6FE; color: var(--purple);
+  }
+  .stat-label {
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 8px; font-weight: 700;
+    color: rgba(0, 0, 0, 0.5);
+  }
+  .stat.primary .stat-label { color: rgba(255, 255, 255, 0.55); }
+  .stat.accent .stat-label { color: rgba(29, 78, 216, 0.75); }
+  .stat.amber .stat-label { color: rgba(180, 83, 9, 0.78); }
+  .stat.rose .stat-label { color: rgba(190, 18, 60, 0.78); }
+  .stat.purple .stat-label { color: rgba(124, 58, 237, 0.78); }
+  .stat-value {
+    font-family: var(--font-serif); font-size: 36px; line-height: 1.05; font-weight: 400;
+    position: relative; z-index: 1;
+  }
+
+  /* グラフ枠リッチ化 */
+  .chart-wrap, .anim-wrap {
+    background: linear-gradient(180deg, #FFFFFF 0%, #FAFBFC 100%);
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 6px 18px rgba(15, 23, 42, 0.05);
+    padding: 16px 14px;
+    position: relative;
+  }
+  /* チャート上部のバッジは削除(干渉防止) */
+
+  /* preset-btn: クラスのみで動くピル */
+  .preset-btn {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    padding: 11px 20px;
+    background: white; color: var(--ink);
+    border: 1.5px solid #E2E8F0;
+    border-radius: 100px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.15s;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  .preset-btn:hover {
+    border-color: var(--blue); background: var(--blue-bg); color: var(--blue-dark);
+    transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
+  }
+  .preset-btn.active-preset {
+    background: var(--blue); color: white; border-color: var(--blue);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    transform: translateY(-1px);
+  }
+
+  /* CTA ボタン: AI フィット用 */
+  .cta-fit {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    padding: 13px 26px;
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white; border: none; border-radius: 100px;
+    cursor: pointer; letter-spacing: 0.03em;
+    display: inline-flex; align-items: center; gap: 4px;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transition: all 0.15s;
+  }
+  .cta-fit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45); }
+  .cta-fit:active { transform: translateY(0); }
+  .cta-reset {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
+    padding: 13px 20px;
+    background: white; color: var(--ink-2);
+    border: 1.5px solid #E2E8F0; border-radius: 100px;
+    cursor: pointer; letter-spacing: 0.03em;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: all 0.15s;
+  }
+  .cta-reset:hover { border-color: var(--ink-3); color: var(--ink); background: var(--surface-2); }
+
+  /* オーディオボタン強化 */
+  .audio-btn {
+    font-size: 15px; padding: 14px 28px;
+    background: linear-gradient(135deg, #1F2937 0%, #0F172A 100%);
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  .audio-btn.playing {
+    background: linear-gradient(135deg, #E11D48 0%, #9F1239 100%);
+    box-shadow: 0 4px 18px rgba(225, 29, 72, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  /* MOBILE */
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 280px; max-width: 80vw; transform: translateX(-100%); transition: transform 0.2s ease; z-index: 50; box-shadow: var(--shadow-lg); }
+    .sidebar.open { transform: translateX(0); }
+    .menu-btn { display: flex; }
+    .slide { padding: 64px 20px 90px; }
+    .slide-nav { bottom: 14px; right: 14px; }
+    .slide-inner h1 { font-size: 40px; }
+    .slide-inner h2 { font-size: 30px; margin-top: 8px; }
+    .slide-inner .stat-value { font-size: 28px; }
+    .slide-inner .equation { font-size: 16px; padding: 18px 20px; }
+    .slide-inner .callout .body { font-size: 14px; }
+    .controls.grid-2 { grid-template-columns: 1fr; gap: 14px; }
+    .controls.grid-3 { grid-template-columns: 1fr; gap: 14px; }
+    .stat-row { grid-template-columns: 1fr; gap: 10px; }
+    .block { padding: 28px 22px; border-radius: 18px; }
+    .control-value { font-size: 22px; }
+    .tocbar { grid-template-columns: repeat(2, 1fr); }
+    .split-answer { grid-template-columns: 1fr !important; }
+    .gate-title { font-size: 56px; }
+    .gate-sub { font-size: 18px; }
+    .title-cover .cover-sub { font-size: 44px; }
+    .story-block { padding: 24px; }
+    .story-text { font-size: 17px; }
+    .story-q { font-size: 24px; }
+    .principle-card { grid-template-columns: 50px 50px 1fr; gap: 14px; padding: 16px; }
+    .anim-wrap { height: 280px; }
+    .submit-box { padding: 20px 22px; }
+    .submit-box .sb-title { font-size: 22px; }
+    .submit-box .sb-prompt { font-size: 11px; }
+  }
+
+  /* PRINT */
+  @media print {
+    @page { size: A4 landscape; margin: 0; }
+    html, body { height: auto !important; overflow: visible !important; background: white !important; counter-reset: slidenum; }
+    /* 印刷時はグラデ・シャドウを抑制 */
+    .block, .controls, .control-row, .chart-wrap, .anim-wrap, .stat, .equation, .equation.light,
+    .gemini-box, .submit-box, .preset-btn, .cta-fit, .cta-reset, .audio-btn {
+      background-image: none !important; box-shadow: none !important;
+    }
+    .equation { background-color: #1F2937 !important; }
+    .equation.light { background-color: #F8FAFC !important; }
+    .stat.primary { background-color: #0F172A !important; }
+    .stat.accent { background-color: #EFF6FF !important; }
+    .stat.amber { background-color: #FFFBEB !important; }
+    .stat.rose { background-color: #FFF1F2 !important; }
+    .stat.purple { background-color: #F5F3FF !important; }
+    .cta-fit { background-color: #10B981 !important; }
+    .audio-btn { background-color: #1F2937 !important; }
+    .chart-wrap::before, .anim-wrap::before, .controls::after, .equation::after { display: none !important; }
+    .block::before { background-image: linear-gradient(90deg, #2563EB, #7C3AED, #F59E0B) !important; }
+    .slide { counter-increment: slidenum; }
+    .slide::after {
+      content: counter(slidenum) " / 22  ·  情報数理入門 第 5 回 ／ 小船 幹生";
+      position: absolute; bottom: 6mm; right: 16mm;
+      font-family: "JetBrains Mono", monospace; font-size: 9pt; color: #9CA3AF; letter-spacing: 0.04em; pointer-events: none;
+    }
+    .slide.title-cover::after { color: #93C5FD !important; }
+    .slide.gate::after { color: #94A3B8 !important; }
+    .sidebar, .menu-btn, .sidebar-backdrop, .slide-nav { display: none !important; }
+    .shell { display: block !important; height: auto !important; overflow: visible !important; grid-template-columns: 1fr !important; }
+    .main { height: auto !important; overflow: visible !important; position: static !important; }
+    .slide-deck { position: relative !important; height: auto !important; }
+    .slide { position: relative !important; opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; display: block !important; page-break-after: always !important; page-break-inside: avoid !important; break-after: page !important; break-inside: avoid !important; width: 297mm !important; height: 210mm !important; padding: 12mm 16mm 14mm !important; overflow: hidden !important; box-sizing: border-box !important; transition: none !important; }
+    .slide:last-child { page-break-after: auto !important; break-after: auto !important; }
+    .slide.gate, .slide.title-cover { display: flex !important; }
+    .slide-inner { max-width: 100% !important; }
+    .slide-inner h1 { font-size: 48px !important; }
+    .slide-inner h2 { font-size: 30px !important; margin-top: 2px !important; margin-bottom: 6px !important; }
+    .slide-inner .section-sub { font-size: 13px !important; margin-bottom: 8px !important; line-height: 1.55 !important; }
+    .slide-inner .equation { font-size: 14px !important; padding: 8px 12px !important; margin: 4px 0 !important; }
+    .slide-inner .callout { padding: 6px 10px !important; margin: 4px 0 !important; }
+    .slide-inner .callout .body { font-size: 11px !important; line-height: 1.55 !important; }
+    .slide-inner .block { padding: 10px !important; margin-bottom: 6px !important; }
+    .slide-inner .stat { padding: 6px 10px !important; }
+    .slide-inner .stat-value { font-size: 18px !important; }
+    .slide-inner .stat-label { font-size: 10px !important; }
+    .slide-inner .control-label { font-size: 11px !important; }
+    .slide-inner .control-value { font-size: 12px !important; }
+    .gate-icon { width: 60px !important; height: 60px !important; margin-bottom: 14px !important; }
+    .gate-part-num { font-size: 13px !important; margin-bottom: 18px !important; }
+    .gate-title { font-size: 72px !important; margin-bottom: 18px !important; }
+    .gate-sub { font-size: 16px !important; }
+    .title-cover .cover-num { font-size: 64px !important; margin-bottom: 20px !important; }
+    .title-cover .cover-sub { font-size: 56px !important; margin-bottom: 24px !important; }
+    .title-cover .cover-meta { font-size: 12px !important; margin-bottom: 18px !important; }
+    .title-cover .cover-title { font-size: 22px !important; }
+    .chart-wrap { height: 200px !important; padding: 4px 6px !important; }
+    .anim-wrap { height: 200px !important; padding: 6px !important; }
+    .story-block { padding: 12px 18px !important; margin: 6px 0 !important; }
+    .story-text { font-size: 13px !important; line-height: 1.55 !important; }
+    .story-q { font-size: 17px !important; margin-top: 8px !important; }
+    .story-hero { padding: 6px 10px !important; margin-bottom: 6px !important; }
+    .story-hero .sh-icon { width: 64px !important; height: 64px !important; }
+    .story-hero .sh-text .sh-title { font-size: 17px !important; }
+    .story-hero .sh-text .sh-sub { font-size: 12px !important; }
+    .gemini-box { padding: 10px 14px !important; margin-top: 6px !important; }
+    .gemini-box .gb-title { font-size: 14px !important; margin-bottom: 6px !important; }
+    .gemini-box .gb-body { font-size: 11px !important; line-height: 1.5 !important; }
+    .gemini-box .gb-prompt { font-size: 10px !important; padding: 8px 12px !important; }
+    .submit-box { padding: 12px 16px !important; }
+    .submit-box .sb-title { font-size: 20px !important; margin-bottom: 8px !important; }
+    .submit-box .sb-body { font-size: 11px !important; line-height: 1.55 !important; margin-bottom: 6px !important; }
+    .submit-box .sb-step { padding: 6px 10px !important; }
+    .submit-box .sb-step .desc { font-size: 10px !important; line-height: 1.55 !important; }
+    .submit-box .sb-prompt { font-size: 10px !important; padding: 8px 12px !important; }
+    .submit-box .sb-note { font-size: 10px !important; padding: 6px 10px !important; }
+    .principle-card { padding: 8px 14px !important; margin-bottom: 4px !important; }
+    .principle-card h4 { font-size: 14px !important; margin-bottom: 2px !important; }
+    .principle-card p { font-size: 11px !important; line-height: 1.5 !important; }
+    .principle-card .num { font-size: 36px !important; }
+    .principle-card .principle-icon { width: 44px !important; height: 44px !important; }
+    .toc-item { padding: 8px 12px !important; }
+    .toc-item .toc-name { font-size: 14px !important; }
+    .toc-item .toc-hint { font-size: 10px !important; }
+    .toc-item .toc-icon { width: 24px !important; height: 24px !important; }
+  }
+</style>
+</head>
+<body>
+<button class="menu-btn" id="menu-btn" aria-label="メニューを開く">≡</button>
+<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+<div class="shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="mark">情</div>
+      <div>
+        <div class="title">情報数理入門</div>
+        <div class="sub">第 5 回 ｜ LECTURE 05</div>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">イントロ</div>
+      <a class="nav-link" href="#slide-1" data-slide="1"><span class="icon">◇</span>表紙<span class="sub-num">1</span></a>
+      <a class="nav-link" href="#slide-2" data-slide="2"><span class="icon">⌂</span>今日の全体像<span class="sub-num">2</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">PART 1 ｜ 回転と波</div>
+      <a class="nav-link" href="#slide-3" data-slide="3" data-slide-range="3-7"><span class="icon">1</span>観覧車と sin / cos<span class="sub-num">3 – 7</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">PART 2 ｜ 音は周期</div>
+      <a class="nav-link" href="#slide-8" data-slide="8" data-slide-range="8-10"><span class="icon">2</span>振動と周波数<span class="sub-num">8–10</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">PART 3 ｜ 一年は周期</div>
+      <a class="nav-link" href="#slide-11" data-slide="11" data-slide-range="11-15"><span class="icon">3</span>季節と経済の周期<span class="sub-num">11–15</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">PART 4 ｜ 重ねる</div>
+      <a class="nav-link" href="#slide-16" data-slide="16" data-slide-range="16-18"><span class="icon">4</span>うなり と 矩形波<span class="sub-num">16–18</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">PART 5 ｜ 絵を描く</div>
+      <a class="nav-link" href="#slide-19" data-slide="19" data-slide-range="19-21"><span class="icon">5</span>Lissajous と提出課題<span class="sub-num">19–21</span></a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">まとめ</div>
+      <a class="nav-link" href="#slide-22" data-slide="22"><span class="icon">◆</span>三つの統一原理<span class="sub-num">22</span></a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="slide-deck" id="slide-deck">
+    <!-- 1: COVER -->
+    <section class="slide title-cover" id="slide-1" data-title="表紙">
+      <div class="slide-inner" style="text-align: center;">
+        <div class="cover-meta">平成国際大学 情報デザイン学部 ／ Lecture 05</div>
+        <div class="cover-title">情報数理入門</div>
+        <div class="cover-num">第 5 回</div>
+        <div class="cover-sub">回転と、<br>波。</div>
+        <div class="cover-author">小船 幹生</div>
+      </div>
+    </section>
+
+    <!-- 2: OVERVIEW -->
+    <section class="slide" id="slide-2" data-title="今日の全体像">
+      <div class="slide-inner">
+        <div class="eyebrow">全体像</div>
+        <h2>繰り返しおこる現象は、<br>たった <em>2 本の波</em>で書ける。</h2>
+        <p class="section-sub">
+          観覧車・音・季節・心拍 — 身の回りには周期的に変化する現象が数多くある。<br>
+          時間に対してグラフを取ると、 いずれも <strong>同じ形の波</strong>になる。 本日はその波の名前と、 波を重ね合わせて図形を作る手順を扱う。
+        </p>
+
+        <div class="callout amber" style="margin-top: 12px;">
+          <div class="ico">◎</div>
+          <div class="body">
+            <strong>位置づけ — </strong> sin / cos / tan は三角関数として知られている。 本講義ではこれらを <strong>角度を扱う道具としてではなく、 周期現象を表す関数</strong>として用いる。
+          </div>
+        </div>
+
+        <div class="tocbar" style="margin-top: 24px;">
+          <a class="toc-item" href="#slide-3" data-slide="3">
+            <div class="toc-icon"><svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="128" cy="128" r="78" fill="none" stroke="#1D4ED8" stroke-width="10"/>
+              <line x1="128" y1="128" x2="128" y2="50" stroke="#1D4ED8" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="128" cy="50" r="12" fill="#F59E0B"/>
+              <circle cx="128" cy="128" r="6" fill="#1D4ED8"/>
+            </svg></div>
+            <div class="toc-num">01 ／ PART 1</div>
+            <div class="toc-name">回転と波</div>
+            <div class="toc-hint">観覧車の運動から sin / cos へ</div>
+          </a>
+          <a class="toc-item" href="#slide-8" data-slide="8">
+            <div class="toc-icon"><svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M20 128 Q 56 60 92 128 T 164 128 T 236 128" stroke="#F59E0B" stroke-width="10" fill="none" stroke-linecap="round"/>
+            </svg></div>
+            <div class="toc-num">02 ／ PART 2</div>
+            <div class="toc-name">音は周期</div>
+            <div class="toc-hint">440 Hz の振動を耳と目で観察する</div>
+          </a>
+          <a class="toc-item" href="#slide-11" data-slide="11">
+            <div class="toc-icon"><svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M20 160 Q 70 60 128 128 T 236 100" stroke="#059669" stroke-width="10" fill="none" stroke-linecap="round"/>
+              <circle cx="60" cy="120" r="6" fill="#059669"/><circle cx="100" cy="100" r="6" fill="#059669"/>
+              <circle cx="140" cy="120" r="6" fill="#059669"/><circle cx="180" cy="110" r="6" fill="#059669"/>
+            </svg></div>
+            <div class="toc-num">03 ／ PART 3</div>
+            <div class="toc-name">季節と経済の周期</div>
+            <div class="toc-hint">気温（年）＋ カフェ売上（週）</div>
+          </a>
+          <a class="toc-item" href="#slide-16" data-slide="16">
+            <div class="toc-icon"><svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M20 128 Q 60 80 100 128 T 180 128 T 236 128" stroke="#7C3AED" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.6"/>
+              <path d="M20 128 Q 50 100 80 128 T 140 128 T 200 128 T 236 128" stroke="#1D4ED8" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.6"/>
+              <path d="M20 128 Q 56 50 92 128 Q 128 200 164 128 T 236 128" stroke="#0F172A" stroke-width="8" fill="none" stroke-linecap="round"/>
+            </svg></div>
+            <div class="toc-num">04 ／ PART 4</div>
+            <div class="toc-name">重ね合わせ</div>
+            <div class="toc-hint">うなり・矩形波 — フーリエへの導入</div>
+          </a>
+          <a class="toc-item" href="#slide-19" data-slide="19">
+            <div class="toc-icon"><svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M128 30 C 200 80 200 176 128 226 C 56 176 56 80 128 30" stroke="#E11D48" stroke-width="6" fill="none"/>
+              <path d="M30 128 C 80 56 176 56 226 128 C 176 200 80 200 30 128" stroke="#F59E0B" stroke-width="6" fill="none"/>
+            </svg></div>
+            <div class="toc-num">05 ／ PART 5</div>
+            <div class="toc-name">図形を作る</div>
+            <div class="toc-hint">Lissajous 図形と Canvas 課題</div>
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3-7: PART 1 placeholders -->
+    <section class="slide gate" id="slide-3" data-title="PART 1 ｜ 扉">
+      <div class="gate-inner">
+        <div class="gate-icon">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="128" cy="128" r="78" fill="none" stroke="#60A5FA" stroke-width="10"/>
+            <line x1="128" y1="128" x2="128" y2="50" stroke="#60A5FA" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="128" cy="50" r="12" fill="#FCD34D"/>
+            <circle cx="128" cy="128" r="6" fill="#60A5FA"/>
+          </svg>
+        </div>
+        <div class="gate-part-num">P A R T  &nbsp;1</div>
+        <h1 class="gate-title">回転から、<br><span class="gate-accent">波</span>が生まれる。</h1>
+        <p class="gate-sub">
+          観覧車のゴンドラの <strong style="color: white;">高さ</strong>を時間に対してグラフに取ると、 一定の形をした波が現れる。 これを <strong style="color: white;">sin</strong> と呼ぶ。 横位置を取れば <strong style="color: white;">cos</strong> となる。 回転運動から波が現れる仕組みを、 この章で確かめる。
+        </p>
+      </div>
+    </section>
+    <section class="slide" id="slide-4" data-title="PART 1 ｜ 観覧車">
+      <div class="slide-inner">
+        <div class="eyebrow">現象 / 観覧車</div>
+        <h2>ゴンドラの高さに、<br>注目する。</h2>
+
+        <div class="story-hero">
+          <div class="sh-icon">
+            <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <line x1="128" y1="128" x2="60" y2="220" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"/>
+              <line x1="128" y1="128" x2="196" y2="220" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="128" cy="128" r="70" fill="none" stroke="#1D4ED8" stroke-width="6"/>
+              <g stroke="#94A3B8" stroke-width="3">
+                <line x1="128" y1="128" x2="128" y2="58"/>
+                <line x1="128" y1="128" x2="178" y2="78"/>
+                <line x1="128" y1="128" x2="198" y2="128"/>
+                <line x1="128" y1="128" x2="178" y2="178"/>
+                <line x1="128" y1="128" x2="128" y2="198"/>
+                <line x1="128" y1="128" x2="78" y2="178"/>
+                <line x1="128" y1="128" x2="58" y2="128"/>
+                <line x1="128" y1="128" x2="78" y2="78"/>
+              </g>
+              <circle cx="128" cy="58" r="9" fill="#E11D48"/>
+              <circle cx="178" cy="78" r="7" fill="#93C5FD"/>
+              <circle cx="198" cy="128" r="7" fill="#93C5FD"/>
+              <circle cx="178" cy="178" r="7" fill="#93C5FD"/>
+              <circle cx="128" cy="198" r="7" fill="#93C5FD"/>
+              <circle cx="78" cy="178" r="7" fill="#93C5FD"/>
+              <circle cx="58" cy="128" r="7" fill="#93C5FD"/>
+              <circle cx="78" cy="78" r="7" fill="#93C5FD"/>
+            </svg>
+          </div>
+          <div class="sh-text">
+            <div class="sh-tag">SCENARIO ／ FERRIS WHEEL</div>
+            <div class="sh-title">直径 100 m、 一周 8 秒の観覧車</div>
+            <div class="sh-sub">赤いゴンドラの <strong>高さ</strong>を 1 秒ごとに記録していく場面を考える。</div>
+          </div>
+        </div>
+
+        <div class="story-block">
+          <div class="story-label">Question</div>
+          <div class="story-text">
+            観覧車が <strong>一定の速さ</strong>で回るとき、<br>
+            ゴンドラの <strong>高さ</strong>は、 時間の経過とともにどう変化するか。
+          </div>
+          <div class="story-q">—— 結果は <em>滑らかに上下する一つの曲線</em>。 これを sin と呼ぶ。</div>
+        </div>
+
+        <div class="callout">
+          <div class="ico">◎</div>
+          <div class="body">
+            <strong>回転の角速度は一定</strong>(角度は時間に対して均等に進む)であっても、 <strong>高さの変化は均等ではない</strong>。 頂上付近では変化が緩やかで、 横位置の付近で最も速く変化する。 この「角度は一定なのに高さの変化は一定でない」 関係を表す関数が <strong>sin</strong> である。
+          </div>
+        </div>
+
+        <div class="gemini-box">
+          <div class="gb-head">Gemini を補助に使う ｜ 周期が掴みにくい場合</div>
+          <div class="gb-title">観覧車の上下運動を短い動画として生成させる</div>
+          <div class="gb-body">
+            周期性は静止画では理解しにくい。 Gemini に下記のプロンプトを投げ、 動画や GIF を生成して提示する。 上半分は遅く、 横位置で速く動く、 という不均等さが視覚的に把握できる。
+          </div>
+          <div class="gb-prompt">観覧車を真横から見たアニメーションを作成してください。 ゴンドラ 1 つを赤、 ほかを灰色とし、 赤いゴンドラの高さを画面右側の時間軸グラフへ同時にプロットしてください。 1 周は 8 秒。</div>
+        </div>
+      </div>
+    </section>
+    <section class="slide" id="slide-5" data-title="PART 1 ｜ 高さの波">
+      <div class="slide-inner">
+        <div class="eyebrow">動かしてみる / 観覧車と高さの波</div>
+        <h2>回転を高さで見ると、<br><em>sin</em> が現れる。</h2>
+
+        <div class="block">
+          <div class="controls grid-3">
+            <div class="control-row">
+              <div class="control-label"><span>周期（一周にかかる時間）</span><span class="control-value" id="c1-T-val">8.0 秒</span></div>
+              <input type="range" id="c1-T" min="3" max="16" value="8" step="0.5">
+            </div>
+            <div class="control-row">
+              <div class="control-label"><span>振幅（観覧車の半径）</span><span class="control-value" id="c1-A-val">50 m</span></div>
+              <input type="range" id="c1-A" min="20" max="80" value="50" step="5">
+            </div>
+            <div class="control-row">
+              <div class="control-label"><span>中心の高さ</span><span class="control-value" id="c1-C-val">55 m</span></div>
+              <input type="range" id="c1-C" min="30" max="100" value="55" step="5">
+            </div>
+          </div>
+
+          <div class="equation light">
+            高さ ＝ <span class="var" id="c1-eq-C">55</span> <span class="op">+</span> <span class="var" id="c1-eq-A">50</span> <span class="op">×</span> sin( <span class="op">2π</span> <span class="op">×</span> 時間 <span class="op">÷</span> <span class="var" id="c1-eq-T">8</span> )
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; margin-top: 18px; align-items: stretch;">
+            <div class="anim-wrap" style="aspect-ratio: 1; height: auto;">
+              <canvas id="c1-wheel"></canvas>
+            </div>
+            <div class="anim-wrap">
+              <canvas id="c1-trace"></canvas>
+            </div>
+          </div>
+
+          <div class="stat-row" style="margin-top: 18px;">
+            <div class="stat accent">
+              <div class="stat-label">いまの高さ</div>
+              <div class="stat-value" id="c1-h" style="font-size: 30px;">55 <span class="stat-unit">m</span></div>
+            </div>
+            <div class="stat amber">
+              <div class="stat-label">一周にかかる時間（周期 T）</div>
+              <div class="stat-value" id="c1-T2" style="font-size: 30px;">8.0 <span class="stat-unit">秒</span></div>
+            </div>
+            <div class="stat primary">
+              <div class="stat-label">1 秒間に何周（周波数 f ＝ 1/T）</div>
+              <div class="stat-value" id="c1-f" style="font-size: 30px;">0.125 <span class="stat-unit">Hz</span></div>
+            </div>
+          </div>
+
+          <div class="callout amber" style="margin-top: 14px;">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>3 つの値で波の形が決まる</strong>。 <strong>周期 T</strong>(一周にかかる時間)、 <strong>振幅 A</strong>(最大と中心の差)、 <strong>中心 C</strong>(平均の高さ)。 この 3 つで、 あらゆる周期現象を表せる。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="slide" id="slide-6" data-title="PART 1 ｜ sin と cos">
+      <div class="slide-inner">
+        <div class="eyebrow">考え方 / 高さと横位置の関係</div>
+        <h2>横位置を取れば、<br><em>cos</em> が現れる。</h2>
+        <p class="section-sub">
+          観覧車のゴンドラには <strong>高さ</strong>だけでなく <strong>横の位置</strong>もある。 横位置を時間に対してグラフに取ると、 sin と <strong>同じ形のまま 90° だけずれた波</strong>が得られる。 これが cos である。
+        </p>
+
+        <div class="block">
+          <div class="control-row" style="margin-bottom: 18px;">
+            <div class="control-label"><span>観覧車の角度（時間と同じ意味）</span><span class="control-value" id="c2-th-val">90 °</span></div>
+            <input type="range" id="c2-th" min="0" max="360" value="90" step="1">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; align-items: stretch;">
+            <div class="anim-wrap" style="aspect-ratio: 1; height: auto;">
+              <canvas id="c2-wheel"></canvas>
+            </div>
+            <div class="anim-wrap">
+              <canvas id="c2-trace"></canvas>
+            </div>
+          </div>
+
+          <div class="stat-row" style="margin-top: 18px;">
+            <div class="stat accent">
+              <div class="stat-label">縦位置 ＝ sin（角度）</div>
+              <div class="stat-value" id="c2-sin" style="font-size: 30px;">+1.00</div>
+            </div>
+            <div class="stat purple">
+              <div class="stat-label">横位置 ＝ cos（角度）</div>
+              <div class="stat-value" id="c2-cos" style="font-size: 30px;">0.00</div>
+            </div>
+            <div class="stat primary">
+              <div class="stat-label">2 つの関係</div>
+              <div class="stat-value" style="font-size: 22px;">sin² ＋ cos² ＝ 1</div>
+            </div>
+          </div>
+
+          <div class="callout purple" style="margin-top: 14px;">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>sin と cos は同じ波形を 90° ずらした関係にある</strong>。 高さが 0 のとき横位置は ±1、 高さが ±1 のとき横位置は 0。 円周上のどの位置でも <strong>縦² ＋ 横² ＝ 1</strong>(三平方の定理)が成り立つ。
+            </div>
+          </div>
+        </div>
+
+        <div class="gemini-box">
+          <div class="gb-head">Gemini を補助に使う ｜ 90° ずれる関係の可視化</div>
+          <div class="gb-title">sin と cos を同じ平面に重ねた図を生成させる</div>
+          <div class="gb-body">
+            「ずれた波」 は言葉だけでは把握しにくい。 Gemini に <strong>sin と cos を同一平面に重ねた図</strong>を作らせ、 <strong>波 1 つ分の 1/4</strong> が 90° に対応することを視覚的に確認する。
+          </div>
+          <div class="gb-prompt">sin x と cos x のグラフを同じ座標平面に、 x = 0 から 4π まで描いてください。 sin を青、 cos を赤で表示し、 π/2(= 90°)のずれを矢印で示してください。</div>
+        </div>
+      </div>
+    </section>
+    <section class="slide" id="slide-7" data-title="PART 1 ｜ tan">
+      <div class="slide-inner">
+        <div class="eyebrow">考え方 / tan は傾きを表す</div>
+        <h2><em>tan</em> は波ではなく、<br>傾きを表す関数である。</h2>
+        <p class="section-sub">
+          sin と cos は位置(縦・横)を表す。 tan はその比、 すなわち <strong>「縦 ÷ 横」 = 傾き</strong> を表す。 影の長さ・カメラの視野角・加速度センサーの示す傾き、 などの場面で現れる。
+        </p>
+
+        <div class="block">
+          <div class="control-row" style="margin-bottom: 18px;">
+            <div class="control-label"><span>太陽の高さ（地平線からの角度）</span><span class="control-value" id="c3-th-val">30 °</span></div>
+            <input type="range" id="c3-th" min="5" max="85" value="30" step="1">
+          </div>
+
+          <div class="anim-wrap" style="height: 280px;">
+            <canvas id="c3-shadow"></canvas>
+          </div>
+
+          <div class="stat-row" style="margin-top: 18px;">
+            <div class="stat accent">
+              <div class="stat-label">人の身長</div>
+              <div class="stat-value" style="font-size: 30px;">1.70 <span class="stat-unit">m</span></div>
+            </div>
+            <div class="stat amber">
+              <div class="stat-label">影の長さ ＝ 身長 ÷ tan（角度）</div>
+              <div class="stat-value" id="c3-shadow-len" style="font-size: 30px;">2.94 <span class="stat-unit">m</span></div>
+            </div>
+            <div class="stat primary">
+              <div class="stat-label">tan（角度）</div>
+              <div class="stat-value" id="c3-tan-val" style="font-size: 30px;">0.577</div>
+            </div>
+          </div>
+
+          <div class="equation light">
+            tan（角度）＝ <span class="op">sin</span>（角度）<span class="op">÷</span> <span class="op">cos</span>（角度）＝ 縦の伸び <span class="op">÷</span> 横の伸び
+          </div>
+
+          <div class="callout amber" style="margin-top: 14px;">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>太陽が低い(朝・夕)ほど影は長く、 真上(正午)に近いほど影は短くなる</strong>。 この長さは tan で記述できる。 ロケットの打ち上げ角度、 加速度センサーの値、 カメラの視野角 — いずれの場面でも tan が用いられる。
+            </div>
+          </div>
+        </div>
+
+        <div class="callout rose">
+          <div class="ico">◎</div>
+          <div class="body">
+            <strong>注意 — </strong> tan は <strong>90°・270°</strong> で「縦 ÷ 0」 となり発散する。 sin / cos が連続な周期関数であるのに対し、 tan は <strong>不連続点をもつ関数</strong>である。 したがって、 周期現象を表すという観点では <strong>sin と cos</strong> が中心となる。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8-10: PART 2 -->
+    <section class="slide gate" id="slide-8" data-title="PART 2 ｜ 扉">
+      <div class="gate-inner">
+        <div class="gate-icon">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M20 128 Q 50 60 80 128 T 140 128 T 200 128 T 236 128" stroke="#FCD34D" stroke-width="8" fill="none" stroke-linecap="round"/>
+            <circle cx="40" cy="128" r="6" fill="#FCD34D"/>
+            <circle cx="220" cy="128" r="6" fill="#FCD34D"/>
+          </svg>
+        </div>
+        <div class="gate-part-num">P A R T  &nbsp;2</div>
+        <h1 class="gate-title">音は、<br><span class="gate-accent amber">空気の周期</span>である。</h1>
+        <p class="gate-sub">
+          「ラ」 の音は <strong style="color: white;">1 秒間に 440 回</strong>空気が振動する現象に対応する。 この周期を実際に操作し、 耳と目で確かめる。 同じ sin が、 今度は音色を作っている。
+        </p>
+      </div>
+    </section>
+    <section class="slide" id="slide-9" data-title="PART 2 ｜ 440 Hz の音">
+      <div class="slide-inner">
+        <div class="eyebrow">現象 / 440 Hz の「ラ」</div>
+        <h2>音は、<br>空気の <em>1 秒間に 440 回</em>の振動である。</h2>
+
+        <div class="story-hero">
+          <div class="sh-icon">
+            <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M40 40 L 40 216 L 80 176 L 130 176 L 130 80 L 80 80 Z" fill="none" stroke="#B45309" stroke-width="6" stroke-linejoin="round"/>
+              <path d="M150 76 Q 200 96 200 128 Q 200 160 150 180" fill="none" stroke="#F59E0B" stroke-width="5" stroke-linecap="round"/>
+              <path d="M165 56 Q 230 86 230 128 Q 230 170 165 200" fill="none" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+              <path d="M180 36 Q 256 76 256 128 Q 256 180 180 220" fill="none" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" opacity="0.3"/>
+            </svg>
+          </div>
+          <div class="sh-text">
+            <div class="sh-tag">SCENARIO ／ TUNING FORK</div>
+            <div class="sh-title">オーケストラの基準音「A4」 ＝ 440 Hz</div>
+            <div class="sh-sub">スピーカーや楽器が空気を <strong>1 秒間に 440 回</strong>押し引きしている。 これが「ラ」の音である。</div>
+          </div>
+        </div>
+
+        <div class="story-block">
+          <div class="story-label">橋渡し</div>
+          <div class="story-text">
+            観覧車の一周は <strong>8 秒</strong>。<br>
+            「ラ」 の音は <strong>1/440 秒</strong>で一周。<br>
+            周期が違うだけで、 グラフの <strong>形は同じ sin の波</strong>になる。
+          </div>
+          <div class="story-q">—— 一周にかかる時間が短いほど、 音は <em>高く</em>聞こえる。</div>
+        </div>
+
+        <div class="stat-row" style="margin-top: 24px;">
+          <div class="stat accent">
+            <div class="stat-label">周波数 f</div>
+            <div class="stat-value" style="font-size: 30px;">440 <span class="stat-unit">Hz（回/秒）</span></div>
+          </div>
+          <div class="stat amber">
+            <div class="stat-label">周期 T ＝ 1 / f</div>
+            <div class="stat-value" style="font-size: 30px;">2.27 <span class="stat-unit">ミリ秒</span></div>
+          </div>
+          <div class="stat primary">
+            <div class="stat-label">1 オクターブ上の「ラ」</div>
+            <div class="stat-value" style="font-size: 30px;">880 <span class="stat-unit">Hz</span></div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <div class="ico">◎</div>
+          <div class="body">
+            <strong>1 オクターブ上 ＝ 周波数 2 倍</strong>。 440 の 2 倍が 880、 さらに 2 倍が 1760。 音の高さは <strong>周波数の掛け算</strong>で決まる(第 2 回の指数の議論につながる)。
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="slide" id="slide-10" data-title="PART 2 ｜ 周波数を動かす">
+      <div class="slide-inner">
+        <div class="eyebrow">動かしてみる / 音の高さと大きさ</div>
+        <h2>音の高さは <em>周波数</em>で、<br>大きさは <em>振幅</em>で決まる。</h2>
+
+        <div class="block">
+          <div class="controls grid-2">
+            <div class="control-row">
+              <div class="control-label"><span>周波数 f （音の高さ）</span><span class="control-value" id="c4-f-val">440 Hz</span></div>
+              <input type="range" id="c4-f" min="110" max="1760" value="440" step="1">
+            </div>
+            <div class="control-row">
+              <div class="control-label"><span>振幅 A （音の大きさ）</span><span class="control-value" id="c4-a-val">0.20</span></div>
+              <input type="range" id="c4-a" min="0" max="0.5" value="0.2" step="0.01">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 4px; margin-bottom: 18px;">
+            <button id="c4-play" class="audio-btn">音を鳴らしてみる</button>
+            <button class="preset-btn" data-freq="220">A3 ／ 220 Hz</button>
+            <button class="preset-btn" data-freq="440">A4 ／ 440 Hz</button>
+            <button class="preset-btn" data-freq="880">A5 ／ 880 Hz</button>
+            <button class="preset-btn" data-freq="1760">A6 ／ 1760 Hz</button>
+          </div>
+
+          <div class="anim-wrap" style="height: 280px;">
+            <canvas id="c4-osc"></canvas>
+          </div>
+
+          <div class="stat-row" style="margin-top: 18px;">
+            <div class="stat accent">
+              <div class="stat-label">周期 T（1 回ぶんの時間）</div>
+              <div class="stat-value" id="c4-T" style="font-size: 30px;">2.27 <span class="stat-unit">ミリ秒</span></div>
+            </div>
+            <div class="stat amber">
+              <div class="stat-label">画面に映る波の数（25 ms ぶん）</div>
+              <div class="stat-value" id="c4-cycles" style="font-size: 30px;">11.0 <span class="stat-unit">波</span></div>
+            </div>
+            <div class="stat primary">
+              <div class="stat-label">体感（だいたいの目安）</div>
+              <div class="stat-value" id="c4-feel" style="font-size: 22px;">A4 「ラ」</div>
+            </div>
+          </div>
+
+          <div class="callout amber" style="margin-top: 14px;">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>周波数を 2 倍にすると、 同じ時間あたりの波の本数が 2 倍になる ＝ 音は 1 オクターブ上がる</strong>。 振幅は波の <strong>縦の振れ幅</strong>であり、 大きくするほど音量も大きくなる。 純音は <strong>sin の式 1 本</strong>で十分に表せる。
+            </div>
+          </div>
+
+          <div class="callout rose">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>音量に注意</strong> — イヤホン使用時は、 まず振幅を <strong>0.05 以下</strong>に下げてから再生すること。 高い周波数を大音量で出すと聴覚に負担がかかる。
+            </div>
+          </div>
+        </div>
+
+        <div class="block" style="margin-top: 28px;">
+          <div class="eyebrow">実音で確かめる / マイク録音</div>
+          <h2 style="font-size: 32px; margin-top: 4px; margin-bottom: 18px;">自分の声でも、<br>同じ二つの軸で操作できる。</h2>
+          <p class="section-sub" style="font-size: 16px; margin-bottom: 22px;">
+            短く声を出して録音し、 周波数(再生速度)と振幅(音量)を実際に操作する。 純音の sin と同じく、 録音した実音も <strong>周波数と振幅</strong>の 2 つの軸で制御できる。
+          </p>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; align-items: center;">
+            <button id="rec-start" class="audio-btn">声を録音する</button>
+            <button id="rec-play" class="cta-reset" disabled>再生する</button>
+            <span id="rec-status" style="font-family: var(--font-mono); font-size: 12px; color: var(--ink-mute); letter-spacing: 0.04em;">未録音(最大 3 秒)</span>
+          </div>
+
+          <div class="anim-wrap" style="height: 180px; margin-bottom: 22px;">
+            <canvas id="rec-wave"></canvas>
+          </div>
+
+          <div class="controls grid-2">
+            <div class="control-row">
+              <div class="control-label"><span>再生速度(周波数倍率)</span><span class="control-value" id="rec-rate-val">1.00 倍</span></div>
+              <input type="range" id="rec-rate" min="0.25" max="4" step="0.05" value="1">
+            </div>
+            <div class="control-row">
+              <div class="control-label"><span>音量(振幅倍率)</span><span class="control-value" id="rec-gain-val">0.50</span></div>
+              <input type="range" id="rec-gain" min="0" max="1" step="0.01" value="0.5">
+            </div>
+          </div>
+
+          <div class="callout amber">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>再生速度を 2 倍にすると、 同じ時間あたりの波の本数が 2 倍 ＝ 1 オクターブ上がる</strong>。 実音は単一の sin ではないが、 周波数と振幅という 2 軸で制御できる点は純音と共通である。
+            </div>
+          </div>
+
+          <div class="callout rose">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>注意 — </strong> マイクの使用にはブラウザの許可が必要。 録音は最大 3 秒で自動停止する。 環境により <code style="font-family:var(--font-mono); font-size:12px;">file://</code> で開いた場合に動作しないことがある。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11-13: PART 3 -->
+    <section class="slide gate" id="slide-11" data-title="PART 3 ｜ 扉">
+      <div class="gate-inner">
+        <div class="gate-icon">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M20 160 Q 70 60 128 128 T 236 100" stroke="#6EE7B7" stroke-width="10" fill="none" stroke-linecap="round"/>
+            <circle cx="56" cy="118" r="7" fill="#6EE7B7"/><circle cx="96" cy="84" r="7" fill="#6EE7B7"/>
+            <circle cx="140" cy="124" r="7" fill="#6EE7B7"/><circle cx="180" cy="108" r="7" fill="#6EE7B7"/>
+          </svg>
+        </div>
+        <div class="gate-part-num">P A R T  &nbsp;3</div>
+        <h1 class="gate-title">一年も、<br><span class="gate-accent emerald">一週間</span>も周期。</h1>
+        <p class="gate-sub">
+          観覧車は <strong style="color: white;">8 秒</strong>、 音は <strong style="color: white;">1/440 秒</strong>、 季節は <strong style="color: white;">365 日</strong>、 カフェの売上は <strong style="color: white;">7 日</strong>。 周期が異なるだけで、 グラフはどれも同じ形の波になる。 同じ式で <strong style="color: white;">気温も売上も予測できる</strong>ことを示す。
+        </p>
+      </div>
+    </section>
+    <section class="slide" id="slide-12" data-title="PART 3 ｜ 東京の気温">
+      <div class="slide-inner">
+        <div class="eyebrow">現象 / 東京の月別平均気温</div>
+        <h2>夏は暑く、 冬は寒い。<br>毎年 <em>同じ形の波</em>を描く。</h2>
+        <p class="section-sub">
+          気象庁が公開している東京の月別平均気温(平年値、 1991〜2020 年)を 12 点並べると、 <strong>8 月を頂点、 1 月を底</strong>とする山なりの形が得られる。 これも sin で記述できる。
+        </p>
+
+        <div class="block">
+          <div class="chart-wrap" style="height: 320px;">
+            <canvas id="c5-data"></canvas>
+          </div>
+
+          <div class="stat-row" style="margin-top: 20px;">
+            <div class="stat accent">
+              <div class="stat-label">年間平均（中心）</div>
+              <div class="stat-value" style="font-size: 30px;">16.1 <span class="stat-unit">℃</span></div>
+            </div>
+            <div class="stat amber">
+              <div class="stat-label">夏のピーク（8 月）と冬の底（1 月）の差 ／ 2</div>
+              <div class="stat-value" style="font-size: 30px;">10.6 <span class="stat-unit">℃（＝振幅）</span></div>
+            </div>
+            <div class="stat primary">
+              <div class="stat-label">周期</div>
+              <div class="stat-value" style="font-size: 26px;">12 <span class="stat-unit">ヶ月</span></div>
+            </div>
+          </div>
+
+          <div class="callout emerald" style="margin-top: 14px;">
+            <div class="ico">◎</div>
+            <div class="body">
+              観覧車と同じく <strong>3 つの数</strong>で記述できる。 <strong>中心(年間平均) ＝ 16.1 ℃</strong>、 <strong>振幅(頂点と底の差 ÷ 2) ＝ 10.6 ℃</strong>、 <strong>周期 ＝ 12 か月</strong>。 残りは「頂点が何月か」 を合わせるだけで、 sin 1 本で年間気温の予測が成立する。
+            </div>
+          </div>
+        </div>
+
+        <div class="gemini-box">
+          <div class="gb-head">Gemini を補助に使う ｜ 気温が波形となる理由</div>
+          <div class="gb-title">地軸の傾きと太陽の入射角の関係を短くまとめさせる</div>
+          <div class="gb-body">
+            気温が一年周期で sin の形をとる根拠は、 地軸の傾きと太陽光の入射角の <strong>幾何関係</strong>(cos 則)にある。 教室で深追いせず、 Gemini に簡潔な説明を生成させて理解を補強する。
+          </div>
+          <div class="gb-prompt">気温が一年で sin に近い形を示す理由を、 高校生でも理解できるよう 150 字程度で説明してください。 「地軸の傾き」 と「太陽の入射角」 を含めてください。</div>
+        </div>
+      </div>
+    </section>
+    <section class="slide" id="slide-13" data-title="PART 3 ｜ フィット">
+      <div class="slide-inner">
+        <div class="eyebrow">動かしてみる / 12 か月の気温を波で書く</div>
+        <h2>振幅・中心・位相、<br>3 つの値で <em>予測線</em>が決まる。</h2>
+        <p class="section-sub">
+          観覧車のときと同じ <strong>3 つのスライダー</strong>を動かし、 12 点の中央を通る sin の波を当てはめる。 残差の 2 乗の平均(<strong>RMSE</strong>)が小さいほど、 良い当てはめである。
+        </p>
+
+        <div class="block">
+          <div class="controls grid-3">
+            <div class="control-row">
+              <div class="control-label"><span>振幅 A （℃）</span><span class="control-value" id="c6-A-val">10.0</span></div>
+              <input type="range" id="c6-A" min="2" max="16" value="10" step="0.1">
+            </div>
+            <div class="control-row">
+              <div class="control-label"><span>中心 C （℃）</span><span class="control-value" id="c6-C-val">16.0</span></div>
+              <input type="range" id="c6-C" min="10" max="22" value="16" step="0.1">
+            </div>
+            <div class="control-row">
+              <div class="control-label"><span>位相 φ （ピークが何月か）</span><span class="control-value" id="c6-P-val">7.0 月</span></div>
+              <input type="range" id="c6-P" min="1" max="12" value="7" step="0.1">
+            </div>
+          </div>
+
+          <div class="equation light">
+            気温 ＝ <span class="var" id="c6-eq-C">16.0</span> <span class="op">+</span> <span class="var" id="c6-eq-A">10.0</span> <span class="op">×</span> sin( <span class="op">2π</span> <span class="op">×</span> (月 − <span class="var" id="c6-eq-P">7.0</span>) <span class="op">÷</span> 12 <span class="op">+</span> <span class="op">π/2</span> )
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin: 10px 0 18px;">
+            <button id="c6-best" class="cta-fit">自動で当てはめる</button>
+            <button id="c6-reset" class="cta-reset">最初に戻す</button>
+          </div>
+
+          <div class="chart-wrap" style="height: 340px;">
+            <canvas id="c6-fit"></canvas>
+          </div>
+
+          <div class="stat-row" style="margin-top: 18px;">
+            <div class="stat accent">
+              <div class="stat-label">いまのズレ（RMSE）</div>
+              <div class="stat-value" id="c6-rmse" style="font-size: 30px;">— <span class="stat-unit">℃</span></div>
+            </div>
+            <div class="stat amber">
+              <div class="stat-label">予測：5 月の気温</div>
+              <div class="stat-value" id="c6-may" style="font-size: 30px;">— <span class="stat-unit">℃</span></div>
+            </div>
+            <div class="stat primary">
+              <div class="stat-label">実測：5 月の気温</div>
+              <div class="stat-value" style="font-size: 30px;">19.0 <span class="stat-unit">℃</span></div>
+            </div>
+          </div>
+
+          <div class="callout emerald" style="margin-top: 14px;">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>第 4 回の最小二乗法と同じ手順</strong>を sin に適用すれば、 最良の当てはめを機械的に求められる。 頂点(位相)は <strong>8 月の少し前</strong>に位置する。 同じ <strong>振幅・中心・位相</strong>の枠組みで、 株価・来店者数・心拍などにも適用できる。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14: 経済 STORY（駅前カフェ売上の曜日サイクル） -->
+    <section class="slide" id="slide-14" data-title="PART 3 ｜ 駅前カフェの売上">
+      <div class="slide-inner">
+        <div class="eyebrow">現象 / 駅前カフェの売上</div>
+        <h2>気温は <em>一年</em>で動き、<br>売上は <em>一週間</em>で動く。</h2>
+
+        <div class="story-hero">
+          <div class="sh-icon">
+            <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="40" y="60" width="176" height="156" rx="6" fill="none" stroke="#B45309" stroke-width="6"/>
+              <line x1="40" y1="100" x2="216" y2="100" stroke="#B45309" stroke-width="4"/>
+              <text x="128" y="92" text-anchor="middle" fill="#B45309" font-family="Zen Kaku Gothic New" font-size="22" font-weight="900">CAFE</text>
+              <rect x="64" y="120" width="40" height="80" rx="4" fill="none" stroke="#F59E0B" stroke-width="3"/>
+              <rect x="116" y="120" width="40" height="80" rx="4" fill="none" stroke="#F59E0B" stroke-width="3"/>
+              <rect x="168" y="120" width="40" height="80" rx="4" fill="none" stroke="#F59E0B" stroke-width="3"/>
+              <path d="M120 30 Q 125 50 116 60 M 134 30 Q 139 50 130 60 M 148 30 Q 153 50 144 60" stroke="#9CA3AF" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="sh-text">
+            <div class="sh-tag">SCENARIO ／ WEEKLY SALES</div>
+            <div class="sh-title">駅前カフェ 8 週間(56 日)の売上記録</div>
+            <div class="sh-sub">第 4 回ではアイスコーヒーの売上を「気温」 で予測した。 ところが同じデータには、 もう一つ <strong>曜日の周期</strong>が含まれていた。</div>
+          </div>
+        </div>
+
+        <div class="block" style="margin-top: 18px;">
+          <div class="eyebrow" style="margin-bottom: 10px;">56 日分の売上を並べる</div>
+          <div class="chart-wrap" style="height: 240px;">
+            <canvas id="cWeek-ts"></canvas>
+          </div>
+        </div>
+
+        <div class="block" style="margin-top: 0;">
+          <div class="eyebrow" style="margin-bottom: 10px;">曜日ごとの平均で、 周期が浮かぶ</div>
+          <div class="chart-wrap" style="height: 260px;">
+            <canvas id="cWeek-dow"></canvas>
+          </div>
+        </div>
+
+        <div class="callout amber" style="margin-top: 14px;">
+          <div class="ico">◎</div>
+          <div class="body">
+            <strong>金・土・日が山、 月・火・水が谷</strong>。 これは <strong>気温の場合と同じ構造</strong>であり、 周期が <strong>12 か月</strong>から <strong>7 日</strong>に変わっただけである。 同じ式で、 飲食店の人員シフト、 コンビニの発注、 観光地の宿泊予約なども予測できる。
+          </div>
+        </div>
+
+        <div class="callout purple">
+          <div class="ico">◎</div>
+          <div class="body">
+            <strong>カレンダーに依存する周期の例 — </strong> Apple の四半期決算(1・4・7・10 月)、 確定申告(2〜3 月)、 就職活動(3 月解禁)、 賞与の月(6・12 月)。 <strong>カレンダーに連動する現象の多くは、 sin を用いて記述できる</strong>。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15: 経済 INTERACTIVE（週次フィット） -->
+    <section class="slide" id="slide-15" data-title="PART 3 ｜ 売上の週次フィット">
+      <div class="slide-inner">
+        <div class="eyebrow">動かしてみる / 売上を週 7 日の波で書く</div>
+        <h2>気温と同じ手順で、<br>売上の <em>週周期</em>を予測する。</h2>
+        <p class="section-sub">
+          振幅(週内の高低差)・中心(週平均)・位相(頂点が何曜日か) の 3 つを動かす。 気温の場合と <strong>同じ式・同じスライダー・同じ最小二乗法</strong>を用いる。 周期だけが 12 か月から <strong>7 日</strong>に変わる。
+        </p>
+
+        <div class="block">
+          <div class="controls grid-3">
+            <div class="control-row">
+              <div class="control-label"><span>振幅 A （ピークと谷の差 ÷ 2）</span><span class="control-value" id="cW-A-val">20</span></div>
+              <input type="range" id="cW-A" min="5" max="40" value="20" step="1">
+            </div>
+            <div class="control-row">
+              <div class="control-label"><span>中心 C （週平均）</span><span class="control-value" id="cW-C-val">100</span></div>
+              <input type="range" id="cW-C" min="60" max="160" value="100" step="1">
+            </div>
+            <div class="control-row">
+              <div class="control-label"><span>位相 φ （ピークが何曜日？）</span><span class="control-value" id="cW-P-val">5.0 (金)</span></div>
+              <input type="range" id="cW-P" min="0" max="7" value="5" step="0.1">
+            </div>
+          </div>
+
+          <div class="equation light">
+            売上 ＝ <span class="var" id="cW-eq-C">100</span> <span class="op">+</span> <span class="var" id="cW-eq-A">20</span> <span class="op">×</span> sin( <span class="op">2π</span> <span class="op">×</span> (日 − <span class="var" id="cW-eq-P">5.0</span>) <span class="op">÷</span> 7 <span class="op">+</span> <span class="op">π/2</span> )
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin: 10px 0 18px;">
+            <button id="cW-best" class="cta-fit">自動で当てはめる</button>
+            <button id="cW-reset" class="cta-reset">最初に戻す</button>
+          </div>
+
+          <div class="chart-wrap" style="height: 320px;">
+            <canvas id="cW-fit"></canvas>
+          </div>
+
+          <div class="stat-row" style="margin-top: 18px;">
+            <div class="stat accent">
+              <div class="stat-label">いまのズレ（RMSE）</div>
+              <div class="stat-value" id="cW-rmse" style="font-size: 30px;">— <span class="stat-unit">杯</span></div>
+            </div>
+            <div class="stat amber">
+              <div class="stat-label">予測：来週の金曜の売上</div>
+              <div class="stat-value" id="cW-fri" style="font-size: 30px;">— <span class="stat-unit">杯</span></div>
+            </div>
+            <div class="stat primary">
+              <div class="stat-label">予測：来週の火曜の売上</div>
+              <div class="stat-value" id="cW-tue" style="font-size: 30px;">— <span class="stat-unit">杯</span></div>
+            </div>
+          </div>
+
+          <div class="callout" style="margin-top: 14px;">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>気温の当てはめ(PART 3)と完全に同じ手順</strong>であり、 周期だけが 12 か月から 7 日に変わる。 これがデータサイエンスにおける「<strong>同じ手法を異なる現象に転用できる</strong>」 という意味である。 第 4 回の <strong>1 次関数による予測</strong>に周期成分を加えることで、 さらに予測精度が向上する。
+            </div>
+          </div>
+
+          <div class="callout purple">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>金融データへの応用 — </strong> 株価には曜日アノマリー、 月末のリバランス、 決算前後の変動などの周期が知られている。 これらを sin でモデル化することで、 <strong>機械的に売買のタイミングを設計</strong>できる(クオンツ運用の基礎の一つ)。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16-18: PART 4 -->
+    <section class="slide gate" id="slide-16" data-title="PART 4 ｜ 扉">
+      <div class="gate-inner">
+        <div class="gate-icon">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M20 128 Q 56 96 92 128 T 164 128 T 236 128" stroke="#C4B5FD" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <path d="M20 128 Q 40 100 60 128 T 100 128 T 140 128 T 180 128 T 236 128" stroke="#93C5FD" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <path d="M20 128 Q 56 50 92 128 Q 128 206 164 128 T 236 128" stroke="#FFFFFF" stroke-width="8" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="gate-part-num">P A R T  &nbsp;4</div>
+        <h1 class="gate-title">波を、<br><span class="gate-accent purple">重ね合わせる</span>。</h1>
+        <p class="gate-sub">
+          sin の <strong style="color: white;">足し算</strong>から、 全く異なる形の波が得られる。 うなり・和音・矩形波 — 音色・画像(JPEG)・音声(MP3)はいずれも <strong style="color: white;">sin の重ね合わせ</strong>で記述できる。 これが <strong style="color: white;">フーリエ</strong>の考え方である。
+        </p>
+      </div>
+    </section>
+    <section class="slide" id="slide-17" data-title="PART 4 ｜ うなり">
+      <div class="slide-inner">
+        <div class="eyebrow">動かしてみる / 二つの波を足す</div>
+        <h2>近い周波数を重ねると、<br><em>うなり</em>が現れる。</h2>
+        <p class="section-sub">
+          440 Hz と 442 Hz を同時に鳴らすと、 <strong>1 秒に 2 回</strong>の周期で音量がゆっくり強弱する。 これは 2 つの sin を <strong>足し合わせた</strong>結果である。 ピアノの調律師は、 この現象を頼りに音を合わせる。
+        </p>
+
+        <div class="block">
+          <div class="controls grid-2">
+            <div class="control-row">
+              <div class="control-label"><span>波 1 の周波数 f₁</span><span class="control-value" id="c7-f1-val">5.0 Hz</span></div>
+              <input type="range" id="c7-f1" min="1" max="12" value="5" step="0.1">
+            </div>
+            <div class="control-row">
+              <div class="control-label"><span>波 2 の周波数 f₂</span><span class="control-value" id="c7-f2-val">5.5 Hz</span></div>
+              <input type="range" id="c7-f2" min="1" max="12" value="5.5" step="0.1">
+            </div>
+          </div>
+
+          <div class="equation light">
+            y ＝ sin( <span class="op">2π</span> <span class="op">×</span> <span class="var" id="c7-eq-f1">5.0</span> <span class="op">×</span> t ) <span class="op">+</span> sin( <span class="op">2π</span> <span class="op">×</span> <span class="var" id="c7-eq-f2">5.5</span> <span class="op">×</span> t )
+          </div>
+
+          <div class="chart-wrap" style="height: 280px;">
+            <canvas id="c7-sum"></canvas>
+          </div>
+
+          <div class="stat-row" style="margin-top: 18px;">
+            <div class="stat accent">
+              <div class="stat-label">平均の周波数 ＝ (f₁+f₂)/2</div>
+              <div class="stat-value" id="c7-mean" style="font-size: 30px;">5.25 <span class="stat-unit">Hz</span></div>
+            </div>
+            <div class="stat purple">
+              <div class="stat-label">うなりの周波数 ＝ |f₁−f₂|</div>
+              <div class="stat-value" id="c7-beat" style="font-size: 30px;">0.5 <span class="stat-unit">Hz</span></div>
+            </div>
+            <div class="stat primary">
+              <div class="stat-label">うなりの周期</div>
+              <div class="stat-value" id="c7-beatT" style="font-size: 30px;">2.0 <span class="stat-unit">秒</span></div>
+            </div>
+          </div>
+
+          <div class="callout purple" style="margin-top: 14px;">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>f₁ と f₂ を近づけるほど、 うなりの周期は長くなる</strong>。 同じ周波数なら 1 本の波に戻る。 <strong>大きく離せば「和音」</strong>として聞こえる(ドとミを同時に弾いたときの響き)。 <strong>2 つの sin の和</strong>だけで、 これだけ異なる現象が説明できる。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="slide" id="slide-18" data-title="PART 4 ｜ 矩形波">
+      <div class="slide-inner">
+        <div class="eyebrow">動かしてみる / 重ねるほど形が変わる</div>
+        <h2>sin を <em>奇数倍</em>で足し続けると、<br>矩形波が得られる。</h2>
+        <p class="section-sub">
+          1 倍 + 3 倍 + 5 倍 + 7 倍 + … と、 周波数を <strong>奇数倍ずつ大きくした sin</strong>を加えていくと、 滑らかな波が次第に <strong>矩形波(ON / OFF の波)</strong>に近づく。 これがフーリエの考え方である。
+        </p>
+
+        <div class="block">
+          <div class="control-row" style="margin-bottom: 18px;">
+            <div class="control-label"><span>足し合わせる項の数 N</span><span class="control-value" id="c8-N-val">1</span></div>
+            <input type="range" id="c8-N" min="1" max="20" value="1" step="1">
+          </div>
+
+          <div class="equation light">
+            y ＝ sin( t ) <span class="op">+</span> ⅓ sin( 3t ) <span class="op">+</span> ⅕ sin( 5t ) <span class="op">+</span> … <span class="op">+</span> 1/(2N−1) <span class="op">×</span> sin( (2N−1) t )
+          </div>
+
+          <div class="chart-wrap" style="height: 320px;">
+            <canvas id="c8-square"></canvas>
+          </div>
+
+          <div class="stat-row" style="margin-top: 18px;">
+            <div class="stat accent">
+              <div class="stat-label">いま足している sin の本数</div>
+              <div class="stat-value" id="c8-stat-N" style="font-size: 30px;">1 <span class="stat-unit">本</span></div>
+            </div>
+            <div class="stat purple">
+              <div class="stat-label">いちばん高い周波数（倍音）</div>
+              <div class="stat-value" id="c8-stat-top" style="font-size: 30px;">1 <span class="stat-unit">倍</span></div>
+            </div>
+            <div class="stat primary">
+              <div class="stat-label">N → ∞ で</div>
+              <div class="stat-value" style="font-size: 22px;">矩形波（ON/OFF）</div>
+            </div>
+          </div>
+
+          <div class="callout purple" style="margin-top: 14px;">
+            <div class="ico">◎</div>
+            <div class="body">
+              <strong>あらゆる周期波形は、 sin の足し合わせで記述できる</strong>。 これが <strong>フーリエ級数</strong>である。 JPEG 画像は <strong>2 次元の sin の和</strong>、 MP3 音声は人の耳に聞こえない周波数成分を取り除く圧縮、 心電図の異常検知は特定の周波数成分を抽出する処理 — いずれも同じ枠組みで成り立つ。 <strong>画像・音声・医療の解析に共通する基礎</strong>がここにある。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 17-19: PART 5 -->
+    <section class="slide gate" id="slide-19" data-title="PART 5 ｜ 扉">
+      <div class="gate-inner">
+        <div class="gate-icon">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M128 30 C 200 80 200 176 128 226 C 56 176 56 80 128 30" stroke="#FDA4AF" stroke-width="6" fill="none"/>
+            <path d="M30 128 C 80 56 176 56 226 128 C 176 200 80 200 30 128" stroke="#FCD34D" stroke-width="6" fill="none"/>
+          </svg>
+        </div>
+        <div class="gate-part-num">P A R T  &nbsp;5</div>
+        <h1 class="gate-title">波で、<br><span class="gate-accent rose">図形を描く</span>。</h1>
+        <p class="gate-sub">
+          x 座標も y 座標も <strong style="color: white;">sin で動かす</strong>と、 平面上に予想外の図形が現れる。 これを <strong style="color: white;">Lissajous(リサジュー)図形</strong>といい、 ジェネラティブアートの源流の一つである。 最後に <strong style="color: white;">Gemini を用いて Canvas 作品を作成し、 提出</strong>する。
+        </p>
+      </div>
+    </section>
+    <section class="slide" id="slide-20" data-title="PART 5 ｜ Lissajous">
+      <div class="slide-inner">
+        <div class="eyebrow">動かしてみる / 二つの波で絵を描く</div>
+        <h2><em>Lissajous</em> 図形 ——<br>2 つの sin が描く軌跡。</h2>
+        <p class="section-sub">
+          <strong>x ＝ sin(a × t + φ)</strong>、 <strong>y ＝ sin(b × t)</strong>。 2 本の式だけで、 比 a : b と位相 φ を変えるだけで、 全く異なる模様が得られる。 これが Canvas 作品の素材となる。
+        </p>
+
+        <div class="block">
+          <div class="controls grid-3">
+            <div class="control-row">
+              <div class="control-label"><span>横の周波数 a</span><span class="control-value" id="c9-a-val">3</span></div>
+              <input type="range" id="c9-a" min="1" max="9" value="3" step="1">
+            </div>
+            <div class="control-row">
+              <div class="control-label"><span>縦の周波数 b</span><span class="control-value" id="c9-b-val">2</span></div>
+              <input type="range" id="c9-b" min="1" max="9" value="2" step="1">
+            </div>
+            <div class="control-row">
+              <div class="control-label"><span>位相 φ （横を何度ずらす？）</span><span class="control-value" id="c9-p-val">90 °</span></div>
+              <input type="range" id="c9-p" min="0" max="360" value="90" step="5">
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin: 4px 0 18px;">
+            <button class="preset-btn" data-lp="1,1,90">円 (1:1)</button>
+            <button class="preset-btn" data-lp="1,2,90">U字 (1:2)</button>
+            <button class="preset-btn" data-lp="3,2,90">3:2</button>
+            <button class="preset-btn" data-lp="5,4,90">5:4</button>
+            <button class="preset-btn" data-lp="7,5,0">7:5</button>
+            <button class="preset-btn" data-lp="9,7,45">9:7</button>
+          </div>
+
+          <div class="equation light">
+            x ＝ sin( <span class="var" id="c9-eq-a">3</span> <span class="op">×</span> t <span class="op">+</span> <span class="var" id="c9-eq-p">90°</span> ) ／ y ＝ sin( <span class="var" id="c9-eq-b">2</span> <span class="op">×</span> t )
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="anim-wrap" style="aspect-ratio: 1; height: auto;">
+              <canvas id="c9-lissajous"></canvas>
+            </div>
+            <div style="display: grid; gap: 12px; align-content: start;">
+              <div class="callout">
+                <div class="ico">◎</div>
+                <div class="body">
+                  <strong>比 a : b </strong> が図形の形を決める。<br>
+                  ・1:1 → 円・楕円・直線(φ により変化)<br>
+                  ・1:2 → U 字または ∞ の形<br>
+                  ・3:2 → 蝶のような形<br>
+                  ・大きな素数の比(7:5, 9:7) → より複雑な模様
+                </div>
+              </div>
+              <div class="callout purple">
+                <div class="ico">◎</div>
+                <div class="body">
+                  <strong>位相 φ</strong> は描き始めの位置を表す。 同じ a : b でも φ を変えれば、 <strong>同じ図形を異なる角度から見たような形</strong>に変わる。
+                </div>
+              </div>
+              <div class="callout amber">
+                <div class="ico">◎</div>
+                <div class="body">
+                  式はわずか 2 行であるが、 <strong>多数の異なる模様を生成できる</strong>。 これがジェネラティブアートの原理である。 <strong>次のスライドで、 Gemini を用いて各自の作品を制作する</strong>。
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="slide" id="slide-21" data-title="PART 5 ｜ 提出課題">
+      <div class="slide-inner">
+        <div class="eyebrow">課題 / 今回かぎり、 Canvas で提出</div>
+        <h2>Gemini を用いて、<br>各自の <em>Canvas 作品</em>を制作する。</h2>
+        <p class="section-sub">
+          今回は表計算の代わりに、 <strong>Gemini と協働で Canvas の静止画またはアニメーションを制作し、 提出</strong>してもらう。 sin / cos を組み合わせれば、 手描きでは描きにくい模様や動きを記述できる。
+        </p>
+
+        <div class="submit-box">
+          <div class="sb-head">課題 ／ Lec05 ASSIGNMENT</div>
+          <div class="sb-title">sin / cos を用いた Canvas 作品を 1 点制作し、 提出する</div>
+          <div class="sb-body">
+            HTML ファイル 1 枚を提出してください。 <strong>sin または cos を必ず用いること</strong>。 動的・静的・対話的のいずれの形式でも構いません。 Gemini は自由に利用して問題ありません。
+          </div>
+
+          <div class="sb-steps">
+            <div class="sb-step"><div class="sn">1</div><div class="desc"><strong>テーマを決める</strong>。 例: 花火、 水面の波紋、 魚群、 呼吸する円、 Lissajous の万華鏡、 軌跡で文字を描く、 など。</div></div>
+            <div class="sb-step"><div class="sn">2</div><div class="desc"><a href="https://gemini.google.com/" target="_blank" rel="noopener" style="color: var(--gold-pale); text-decoration: underline;">Gemini</a> を開き、 <strong>下のプロンプト例</strong>を参考に依頼する。 「<code>sin か cos を必ず用いて</code>」 と明記すること。</div></div>
+            <div class="sb-step"><div class="sn">3</div><div class="desc">生成された HTML をエディタ(メモ帳・VS Code 等)に貼り付け、 <code>my_canvas.html</code> として保存し、 <strong>ブラウザで開いて動作を確認</strong>する。</div></div>
+            <div class="sb-step"><div class="sn">4</div><div class="desc">動作しない場合は Gemini に <strong>「動作しない、 エラーは XXX」 と返して修正を依頼</strong>する(2〜3 往復は通常想定される)。</div></div>
+            <div class="sb-step"><div class="sn">5</div><div class="desc">満足できる結果が得られたら、 <strong>パラメータ(周波数・色・速度)を 1 か所だけ自分で変更</strong>する。 この変更が「自分の作品」 となる根拠になる。</div></div>
+            <div class="sb-step"><div class="sn">6</div><div class="desc"><strong>提出物</strong>: ① <code>my_canvas.html</code> / ② Gemini に最初に送ったプロンプト 1 通 / ③ 変更箇所の説明 50 字程度 — 以上 3 点を Google Classroom に提出する。</div></div>
+          </div>
+
+          <div class="sb-prompt"><span class="pkw">【Gemini 発注プロンプトのひな型】</span>
+
+<span class="pkw">テーマ:</span> 「呼吸する円」 を Canvas で描く Web ページを作成してください。
+<span class="pkw">条件:</span>
+1. HTML 1 ファイルで完結する(外部ライブラリは不要)。
+2. 円の半径が <span class="pkw">sin に従って</span>周期的に変化する。
+3. 周期は 4 秒前後で、 ゆっくりとした呼吸の印象に。
+4. 背景は黒、 円は淡い水色で、 軌跡が少し残るとよい。
+5. requestAnimationFrame を用いる。
+6. コードには <span class="pkw">日本語コメント</span>を付し、 sin の式の位置が
+   明確になるようにしてください。</div>
+
+          <div class="sb-note">
+            <strong>評価の観点 — </strong> ① sin / cos が <strong>意味のある位置</strong>で用いられているか(形だけの記述は不可) / ② 各自の変更が <strong>出力に変化を与えているか</strong> / ③ 提出物が <strong>ブラウザで実際に動作するか</strong>。 作品の美しさは評価対象としない(センスではなく、 周期を扱えるかを見る)。
+          </div>
+        </div>
+
+        <div class="callout emerald" style="margin-top: 20px;">
+          <div class="ico">◎</div>
+          <div class="body">
+            <strong>提出期限は次回授業の前日 23:59</strong>。 詰まった場合は Slack の #joho-suuri に「Gemini が動作する HTML を返してくれない」 と書き込んでください(プロンプトの工夫を返信します)。 <strong>次回からは通常通り表計算演習に戻る</strong>。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 20: SUMMARY -->
+    <section class="slide" id="slide-22" data-title="まとめ">
+      <div class="slide-inner">
+        <div class="hr-section"><span class="label">SUMMARY</span></div>
+        <div class="eyebrow">本日のまとめ</div>
+        <h2>三つの統一原理</h2>
+        <p class="section-sub">
+          本講義の 5 つの PART を貫く骨格は、 以下の 3 つに集約される。
+        </p>
+
+        <div class="flow-card">
+          <div class="flow-label">FLOW ／ 今日の流れ</div>
+          <svg viewBox="0 0 800 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <g>
+              <rect x="20" y="40" width="170" height="80" rx="14" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="2"/>
+              <circle cx="105" cy="80" r="26" fill="none" stroke="#1D4ED8" stroke-width="3"/>
+              <line x1="105" y1="80" x2="105" y2="54" stroke="#1D4ED8" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="105" cy="54" r="5" fill="#F59E0B"/>
+              <text x="105" y="142" text-anchor="middle" fill="#1D4ED8" font-family="Zen Kaku Gothic New" font-weight="700" font-size="14">回転から波へ</text>
+              <text x="105" y="22" text-anchor="middle" fill="#9CA3AF" font-family="JetBrains Mono" font-size="11">高さ = A sin(2π t/T)</text>
+            </g>
+            <g stroke="#9CA3AF" stroke-width="2" fill="none">
+              <line x1="200" y1="80" x2="240" y2="80" stroke-linecap="round"/>
+              <polyline points="234,74 240,80 234,86" stroke-linejoin="round" stroke-linecap="round"/>
+            </g>
+            <g>
+              <rect x="250" y="40" width="190" height="80" rx="14" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2"/>
+              <path d="M270 90 Q 295 60 320 90 T 370 90 T 420 90" stroke="#B45309" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <text x="345" y="142" text-anchor="middle" fill="#B45309" font-family="Zen Kaku Gothic New" font-weight="700" font-size="14">音・季節・心拍 すべて sin</text>
+              <text x="345" y="22" text-anchor="middle" fill="#9CA3AF" font-family="JetBrains Mono" font-size="11">速さ T が違うだけ</text>
+            </g>
+            <g stroke="#9CA3AF" stroke-width="2" fill="none">
+              <line x1="450" y1="80" x2="490" y2="80" stroke-linecap="round"/>
+              <polyline points="484,74 490,80 484,86" stroke-linejoin="round" stroke-linecap="round"/>
+            </g>
+            <g>
+              <rect x="500" y="40" width="280" height="80" rx="14" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+              <path d="M520 90 Q 560 50 600 90 Q 640 130 680 90 T 760 90" stroke="#7C3AED" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <text x="640" y="142" text-anchor="middle" fill="#7C3AED" font-family="Zen Kaku Gothic New" font-weight="700" font-size="14">重ね合わせて 画像・音色・図形</text>
+              <text x="640" y="22" text-anchor="middle" fill="#9CA3AF" font-family="JetBrains Mono" font-size="11">フーリエ ／ Lissajous ／ ジェネ</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="principle-card">
+          <div class="num">01</div>
+          <div class="principle-icon">
+            <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="128" cy="128" r="78" fill="none" stroke="#1D4ED8" stroke-width="12"/>
+              <line x1="128" y1="128" x2="128" y2="50" stroke="#1D4ED8" stroke-width="8" stroke-linecap="round"/>
+              <circle cx="128" cy="50" r="14" fill="#F59E0B"/>
+            </svg>
+          </div>
+          <div class="content">
+            <h4>sin と cos は等速回転から得られる波</h4>
+            <p>等速で回る点の <strong>縦位置が sin</strong>、 <strong>横位置が cos</strong>。 二つは 90° ずれた関係にあり、 sin² + cos² = 1 を満たす。 tan は「縦 ÷ 横」 によって傾きを表す。</p>
+          </div>
+        </div>
+        <div class="principle-card">
+          <div class="num">02</div>
+          <div class="principle-icon">
+            <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M20 128 Q 70 60 128 128 T 236 128" stroke="#B45309" stroke-width="12" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="content">
+            <h4>あらゆる周期は、 振幅 A・周期 T・位相 φ の 3 つで記述できる</h4>
+            <p>観覧車(T = 8 秒)、 音(T = 1/440 秒)、 季節(T = 12 か月) — <strong>周期が異なるだけで形は同じ</strong>である。 したがって sin を理解すれば、 音・気温・株価・心拍を <strong>同じ式</strong>で予測できる。</p>
+          </div>
+        </div>
+        <div class="principle-card">
+          <div class="num">03</div>
+          <div class="principle-icon">
+            <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M20 128 Q 60 80 100 128 T 180 128 T 236 128" stroke="#C4B5FD" stroke-width="6" fill="none" stroke-linecap="round"/>
+              <path d="M20 128 Q 56 50 92 128 Q 128 206 164 128 T 236 128" stroke="#7C3AED" stroke-width="10" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="content">
+            <h4>sin の足し合わせによって、 あらゆる波形と図形を表せる</h4>
+            <p>2 つを重ねると「うなり」「和音」、 多数を重ねると「矩形波」「JPEG」「MP3」「Lissajous」 が現れる。 <strong>同じ式が、 音・画像・アートに共通する基礎</strong>となる。 課題ではこれを実際に制作して提出する。</p>
+          </div>
+        </div>
+
+        <footer style="margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 13px; text-align: center;">
+          情報数理入門 第 5 回 ／ 小船 幹生 ／ 平成国際大学 情報デザイン学部
+        </footer>
+      </div>
+    </section>
+    </div>
+  </main>
+</div>
+
+<nav class="slide-nav" id="slide-nav" aria-label="スライドナビゲーション">
+  <button id="nav-prev" aria-label="前のスライド">‹</button>
+  <div class="slide-counter"><span id="nav-current">1</span><span class="sep">/</span><span id="nav-total">22</span></div>
+  <button id="nav-next" aria-label="次のスライド">›</button>
+</nav>
+
+<script>
+// ====================== SLIDE DECK ======================
+(() => {
+  const slides = Array.from(document.querySelectorAll('.slide')).sort((a, b) => {
+    const aN = parseInt((a.id.match(/slide-(\d+)/) || ['', '0'])[1], 10);
+    const bN = parseInt((b.id.match(/slide-(\d+)/) || ['', '0'])[1], 10);
+    return aN - bN;
+  });
+  const total = slides.length;
+  const navPrev = document.getElementById('nav-prev');
+  const navNext = document.getElementById('nav-next');
+  const navCur = document.getElementById('nav-current');
+  const navTotal = document.getElementById('nav-total');
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  const menuBtn = document.getElementById('menu-btn');
+  const navLinks = Array.from(document.querySelectorAll('.nav-link[data-slide]'));
+  if (navTotal) navTotal.textContent = total;
+
+  const getSlideFromHash = () => {
+    const m = (location.hash || '').match(/^#slide-(\d+)$/);
+    if (m) { const n = parseInt(m[1], 10); if (n >= 1 && n <= total) return n; }
+    return 1;
+  };
+  let current = getSlideFromHash();
+
+  const resizeChartsIn = (slide) => {
+    if (!window.Chart) return;
+    slide.querySelectorAll('canvas').forEach((c) => { const chart = Chart.getChart(c); if (chart) chart.resize(); });
+  };
+  const closeSidebar = () => { sidebar?.classList.remove('open'); backdrop?.classList.remove('open'); };
+
+  const go = (n, { updateHash = true } = {}) => {
+    const target = Math.min(Math.max(1, n), total);
+    slides.forEach((el, i) => el.classList.toggle('active', (i + 1) === target));
+    current = target;
+    if (navCur) navCur.textContent = target;
+    if (navPrev) navPrev.disabled = target === 1;
+    if (navNext) navNext.disabled = target === total;
+    navLinks.forEach((a) => {
+      const slideNum = parseInt(a.dataset.slide, 10);
+      const range = a.dataset.slideRange;
+      let active = slideNum === target;
+      if (range) { const [lo, hi] = range.split('-').map((s) => parseInt(s, 10)); active = target >= lo && target <= hi; }
+      a.classList.toggle('active', active);
+    });
+    if (updateHash) { const newHash = `#slide-${target}`; if (location.hash !== newHash) history.replaceState(null, '', newHash); }
+    const activeSlide = slides[target - 1];
+    if (activeSlide) { activeSlide.scrollTop = 0; requestAnimationFrame(() => resizeChartsIn(activeSlide)); }
+    // 動的キャンバスのリサイズイベント発火
+    window.dispatchEvent(new CustomEvent('lec05-slide-change', { detail: { target } }));
+  };
+
+  navPrev?.addEventListener('click', () => go(current - 1));
+  navNext?.addEventListener('click', () => go(current + 1));
+  document.querySelectorAll('a[href^="#slide-"]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      const m = a.getAttribute('href').match(/^#slide-(\d+)$/);
+      if (!m) return; e.preventDefault();
+      go(parseInt(m[1], 10)); closeSidebar();
+    });
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.target.matches('input, textarea, select')) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(current + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(current - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(1); }
+    else if (e.key === 'End') { e.preventDefault(); go(total); }
+  });
+
+  const deck = document.getElementById('slide-deck');
+  let touchStartX = 0, touchStartY = 0, touchActive = false;
+  deck?.addEventListener('touchstart', (e) => { if (e.touches.length !== 1) return; touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; touchActive = true; }, { passive: true });
+  deck?.addEventListener('touchend', (e) => {
+    if (!touchActive) return; touchActive = false;
+    const t = e.changedTouches[0]; const dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) { if (dx < 0) go(current + 1); else go(current - 1); }
+  }, { passive: true });
+
+  window.addEventListener('hashchange', () => { const n = getSlideFromHash(); if (n !== current) go(n, { updateHash: false }); });
+
+  // サイドバートグル: モバイルはスライドイン、 デスクトップは grid 列を畳む
+  const shellEl = document.querySelector('.shell');
+  const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+  const sidebarVisible = () => isMobile()
+    ? sidebar?.classList.contains('open')
+    : !shellEl?.classList.contains('sidebar-collapsed');
+  const syncMenuBtn = () => {
+    if (!menuBtn) return;
+    const open = sidebarVisible();
+    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    menuBtn.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
+    menuBtn.textContent = open ? '✕' : '≡';
+  };
+  const toggleSidebar = () => {
+    if (isMobile()) {
+      sidebar?.classList.toggle('open');
+      backdrop?.classList.toggle('open');
+    } else {
+      shellEl?.classList.toggle('sidebar-collapsed');
+    }
+    syncMenuBtn();
+  };
+  menuBtn?.addEventListener('click', toggleSidebar);
+  backdrop?.addEventListener('click', () => { closeSidebar(); syncMenuBtn(); });
+  window.addEventListener('resize', syncMenuBtn);
+  syncMenuBtn();
+
+  go(current, { updateHash: false });
+  window.addEventListener('load', () => {
+    requestAnimationFrame(() => { const activeSlide = slides[current - 1]; if (activeSlide) resizeChartsIn(activeSlide); });
+  });
+  window.addEventListener('beforeprint', () => {
+    if (!window.Chart) return;
+    document.querySelectorAll('.slide').forEach((slide) => {
+      slide.classList.add('print-active');
+      slide.querySelectorAll('canvas').forEach((c) => { const chart = Chart.getChart(c); if (chart) chart.resize(); });
+    });
+  });
+  window.addEventListener('afterprint', () => { document.querySelectorAll('.slide.print-active').forEach((s) => s.classList.remove('print-active')); });
+})();
+
+// ====================== SHARED ======================
+Chart.defaults.font.family = '"Zen Kaku Gothic New", "JetBrains Mono", sans-serif';
+Chart.defaults.font.size = 13;
+Chart.defaults.font.weight = '600';
+Chart.defaults.color = '#1F2937';
+Chart.defaults.borderColor = '#D1D5DB';
+Chart.defaults.animation = false;
+Chart.defaults.animations = { colors: false, x: false, y: false };
+Chart.defaults.transitions = { active: { animation: { duration: 0 } } };
+// 凡例・ツールチップ(これらは安全な代入先)
+try {
+  Chart.defaults.plugins.legend.labels.font = { family: '"Zen Kaku Gothic New", sans-serif', size: 13, weight: '700' };
+  Chart.defaults.plugins.legend.labels.color = '#1F2937';
+  Chart.defaults.plugins.tooltip.titleFont = { family: '"Zen Kaku Gothic New", sans-serif', size: 13, weight: '700' };
+  Chart.defaults.plugins.tooltip.bodyFont = { family: '"Zen Kaku Gothic New", sans-serif', size: 13, weight: '600' };
+} catch (e) { console.warn('Chart legend/tooltip defaults skip:', e); }
+// 軸の title/ticks は scale type 単位で設定(Chart.js v4 では scales[type] が正)
+try {
+  ['linear', 'category', 'logarithmic'].forEach((t) => {
+    const s = Chart.defaults.scales && Chart.defaults.scales[t];
+    if (!s) return;
+    s.title = Object.assign({}, s.title || {}, { font: { family: '"Zen Kaku Gothic New", sans-serif', size: 13, weight: '700' }, color: '#1F2937' });
+    s.ticks = Object.assign({}, s.ticks || {}, { font: { family: '"JetBrains Mono", "Zen Kaku Gothic New", sans-serif', size: 12, weight: '600' }, color: '#374151' });
+  });
+} catch (e) { console.warn('Chart scale defaults skip:', e); }
+
+// 高 DPI 対応の canvas 初期化ユーティリティ
+function setupCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w: rect.width, h: rect.height };
+}
+
+// ====================== PART 1: 観覧車 (slide-5, slide-6, slide-7) ======================
+// 共通：高 DPI 描画
+function ensureSize(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const targetW = Math.max(1, Math.round(rect.width * dpr));
+  const targetH = Math.max(1, Math.round(rect.height * dpr));
+  if (canvas.width !== targetW || canvas.height !== targetH) {
+    canvas.width = targetW; canvas.height = targetH;
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w: rect.width, h: rect.height };
+}
+
+// 共通: 角丸矩形パス
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// 共通: ピル背景つきテキスト
+function pillLabel(ctx, text, x, y, opts) {
+  const o = Object.assign({ font: '800 14px "Zen Kaku Gothic New", sans-serif', bg: 'rgba(15,23,42,0.88)', fg: 'white', padX: 12, padY: 7, anchor: 'top-left' }, opts || {});
+  ctx.font = o.font;
+  const m = ctx.measureText(text);
+  const tw = m.width;
+  const fontSize = parseInt(o.font.match(/(\d+)px/)?.[1] || '14', 10);
+  const ph = fontSize + o.padY * 2;
+  const pw = tw + o.padX * 2;
+  let px = x, py = y;
+  if (o.anchor === 'top-right') px = x - pw;
+  else if (o.anchor === 'top-center') px = x - pw / 2;
+  else if (o.anchor === 'bottom-left') py = y - ph;
+  else if (o.anchor === 'bottom-right') { px = x - pw; py = y - ph; }
+  else if (o.anchor === 'bottom-center') { px = x - pw / 2; py = y - ph; }
+  ctx.fillStyle = o.bg;
+  roundRectPath(ctx, px, py, pw, ph, ph / 2);
+  ctx.fill();
+  ctx.fillStyle = o.fg;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, px + o.padX, py + ph / 2 + 1);
+}
+
+// 共通: 軸ラベル(Zen Kaku Gothic New, 太字, 濃灰)
+const AXIS_TITLE_FONT = '700 13px "Zen Kaku Gothic New", sans-serif';
+const AXIS_TICK_FONT = '700 12px "JetBrains Mono", "Zen Kaku Gothic New", sans-serif';
+const AXIS_TITLE_COLOR = '#1F2937';
+const AXIS_TICK_COLOR = '#4B5563';
+
+// slide-5: 動く観覧車 + 高さの時系列 (sin)
+// 解析的に sin 曲線を描く(history なし)。 パラメータ変更で即座にリフレッシュ
+(() => {
+  const T = document.getElementById('c1-T');
+  const A = document.getElementById('c1-A');
+  const C = document.getElementById('c1-C');
+  const tV = document.getElementById('c1-T-val');
+  const aV = document.getElementById('c1-A-val');
+  const cV = document.getElementById('c1-C-val');
+  const eqA = document.getElementById('c1-eq-A');
+  const eqT = document.getElementById('c1-eq-T');
+  const eqC = document.getElementById('c1-eq-C');
+  const sH = document.getElementById('c1-h');
+  const sT = document.getElementById('c1-T2');
+  const sF = document.getElementById('c1-f');
+  const wheelC = document.getElementById('c1-wheel');
+  const traceC = document.getElementById('c1-trace');
+  if (!wheelC || !traceC) return;
+
+  const WINDOW_SEC = 16; // 横軸の表示秒数
+  let startMs = performance.now();
+
+  // パラメータ変更でアニメ位相をリセット → グラフが綺麗に流れる
+  [T, A, C].forEach((el) => el.addEventListener('input', () => { startMs = performance.now(); }));
+
+  const draw = () => {
+    const now = performance.now();
+    const t = (now - startMs) / 1000;
+    const period = +T.value, amp = +A.value, ctr = +C.value;
+    // phase = 0 で 9 時(中心の高さ)、 時計回り。
+    // 角度 α(t) = π − phase とすると、 ゴンドラ y 位置は cy − r·sin(α) = cy − r·sin(phase)。
+    // 物理的な高さは ctr + amp·sin(phase) となり、 sin 波形と完全に対応する。
+    const phase = 2 * Math.PI * t / period;
+    const height = ctr + amp * Math.sin(phase);
+
+    tV.textContent = period.toFixed(1) + ' 秒';
+    aV.textContent = amp + ' m';
+    cV.textContent = ctr + ' m';
+    eqA.textContent = amp; eqT.textContent = period.toFixed(1); eqC.textContent = ctr;
+    sH.innerHTML = height.toFixed(1) + ' <span class="stat-unit">m</span>';
+    sT.innerHTML = period.toFixed(1) + ' <span class="stat-unit">秒</span>';
+    sF.innerHTML = (1 / period).toFixed(3) + ' <span class="stat-unit">Hz</span>';
+
+    // 観覧車
+    {
+      const { ctx, w, h } = ensureSize(wheelC);
+      ctx.clearRect(0, 0, w, h);
+      const cx = w / 2;
+      const cy = h * 0.46;
+      const r = Math.min(w * 0.42, h * 0.36);
+      const groundY = h - 22;
+      // 地面
+      ctx.strokeStyle = '#D1D5DB'; ctx.lineWidth = 2; ctx.lineCap = 'butt';
+      ctx.beginPath(); ctx.moveTo(16, groundY); ctx.lineTo(w - 16, groundY); ctx.stroke();
+      // 支柱
+      ctx.strokeStyle = '#9CA3AF'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy); ctx.lineTo(cx - r * 0.55, groundY);
+      ctx.moveTo(cx, cy); ctx.lineTo(cx + r * 0.55, groundY);
+      ctx.stroke();
+      // 外輪
+      ctx.strokeStyle = '#64748B'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.stroke();
+      // 内輪(装飾)
+      ctx.strokeStyle = '#CBD5E1'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, cy, r - 4, 0, 2 * Math.PI); ctx.stroke();
+      // スポーク + ゴンドラ: phase = 0 で 9 時起点、 時計回り(canvas y は反転)
+      const N = 8;
+      for (let i = 0; i < N; i++) {
+        const ph = Math.PI - phase + i * 2 * Math.PI / N;
+        const gx = cx + r * Math.cos(ph);
+        const gy = cy - r * Math.sin(ph);
+        ctx.strokeStyle = '#CBD5E1'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(gx, gy); ctx.stroke();
+        if (i === 0) {
+          ctx.fillStyle = 'rgba(225,29,72,0.35)';
+          ctx.beginPath(); ctx.arc(gx, gy, 14, 0, 2 * Math.PI); ctx.fill();
+          ctx.fillStyle = '#E11D48';
+          ctx.beginPath(); ctx.arc(gx, gy, 10, 0, 2 * Math.PI); ctx.fill();
+          ctx.strokeStyle = 'white'; ctx.lineWidth = 2.5; ctx.stroke();
+        } else {
+          ctx.fillStyle = '#93C5FD';
+          ctx.beginPath(); ctx.arc(gx, gy, 7, 0, 2 * Math.PI); ctx.fill();
+        }
+      }
+      // 中心軸
+      ctx.fillStyle = '#1F2937';
+      ctx.beginPath(); ctx.arc(cx, cy, 7, 0, 2 * Math.PI); ctx.fill();
+      // 高さ表示
+      pillLabel(ctx, `赤いゴンドラの高さ  ${height.toFixed(1)} m`, w - 14, 14, {
+        anchor: 'top-right', bg: 'rgba(225,29,72,0.95)', fg: 'white',
+        font: '800 14px "Zen Kaku Gothic New", sans-serif'
+      });
+    }
+
+    // 時系列グラフ(解析的に描画)
+    {
+      const { ctx, w, h } = ensureSize(traceC);
+      ctx.clearRect(0, 0, w, h);
+      const padL = 64, padR = 24, padT = 32, padB = 48;
+      const gx0 = padL, gx1 = w - padR;
+      const gy0 = padT, gy1 = h - padB;
+      const yMin = ctr - amp - 6, yMax = ctr + amp + 6;
+      // 横グリッド
+      ctx.strokeStyle = '#EEF2F7'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let v = Math.ceil(yMin / 20) * 20; v <= yMax; v += 20) {
+        const y = gy1 - (v - yMin) / (yMax - yMin) * (gy1 - gy0);
+        ctx.moveTo(gx0, y); ctx.lineTo(gx1, y);
+      }
+      ctx.stroke();
+      // 左軸線・下軸線
+      ctx.strokeStyle = '#D1D5DB'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(gx0, gy0); ctx.lineTo(gx0, gy1);
+      ctx.moveTo(gx0, gy1); ctx.lineTo(gx1, gy1);
+      ctx.stroke();
+      // 中心線(C の高さ)
+      const yC = gy1 - (ctr - yMin) / (yMax - yMin) * (gy1 - gy0);
+      ctx.strokeStyle = '#F59E0B'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 5]);
+      ctx.beginPath(); ctx.moveTo(gx0, yC); ctx.lineTo(gx1, yC); ctx.stroke();
+      ctx.setLineDash([]);
+      // 軸ラベル(数値、太字、濃灰)
+      ctx.font = AXIS_TICK_FONT; ctx.fillStyle = AXIS_TICK_COLOR;
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      for (let v = Math.ceil(yMin / 20) * 20; v <= yMax; v += 20) {
+        const y = gy1 - (v - yMin) / (yMax - yMin) * (gy1 - gy0);
+        ctx.fillText(v + ' m', padL - 10, y);
+      }
+      // 横軸のティック(秒)
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      const tMin = Math.max(0, t - WINDOW_SEC), tMax = tMin + WINDOW_SEC;
+      const xOf = (tt) => gx0 + (tt - tMin) / WINDOW_SEC * (gx1 - gx0);
+      const yOf = (vv) => gy1 - (vv - yMin) / (yMax - yMin) * (gy1 - gy0);
+      const tickStep = WINDOW_SEC <= 8 ? 1 : (WINDOW_SEC <= 16 ? 2 : 4);
+      const firstTick = Math.ceil(tMin / tickStep) * tickStep;
+      for (let tt = firstTick; tt <= tMax + 0.001; tt += tickStep) {
+        ctx.fillText(tt.toFixed(0) + ' s', xOf(tt), gy1 + 10);
+      }
+      // 軸タイトル(太字、左上 / 右下)
+      ctx.font = AXIS_TITLE_FONT; ctx.fillStyle = AXIS_TITLE_COLOR;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText('高さ [m]', gx0 - 6, 8);
+      ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+      ctx.fillText('時間 [秒]', gx1, h - 8);
+      // sin 曲線(解析的)
+      ctx.strokeStyle = '#1D4ED8'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      const STEPS = Math.max(240, Math.round(gx1 - gx0));
+      for (let i = 0; i <= STEPS; i++) {
+        const tt = tMin + (i / STEPS) * WINDOW_SEC;
+        const vv = ctr + amp * Math.sin(2 * Math.PI * tt / period);
+        const x = xOf(tt), y = yOf(vv);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      // 現在時刻の縦ライン
+      const tx = xOf(t);
+      ctx.strokeStyle = 'rgba(225,29,72,0.35)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(tx, gy0); ctx.lineTo(tx, gy1); ctx.stroke();
+      ctx.setLineDash([]);
+      // 現在点
+      ctx.fillStyle = '#E11D48';
+      ctx.beginPath(); ctx.arc(tx, yOf(height), 8, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke();
+      // 中心線ラベル「中心 C」
+      pillLabel(ctx, `中心 ${ctr} m`, gx1 - 6, yC, {
+        anchor: 'top-right', bg: 'rgba(245,158,11,0.95)', fg: 'white',
+        font: '700 11px "Zen Kaku Gothic New", sans-serif', padX: 9, padY: 4
+      });
+    }
+  };
+
+  let raf;
+  const tick = () => { draw(); raf = requestAnimationFrame(tick); };
+  raf = requestAnimationFrame(tick);
+})();
+
+// slide-6: sin / cos を並べる(角度スライダー)
+(() => {
+  const th = document.getElementById('c2-th');
+  const thV = document.getElementById('c2-th-val');
+  const sinV = document.getElementById('c2-sin');
+  const cosV = document.getElementById('c2-cos');
+  const wheelC = document.getElementById('c2-wheel');
+  const traceC = document.getElementById('c2-trace');
+  if (!th || !wheelC || !traceC) return;
+
+  const draw = () => {
+    const deg = +th.value;
+    const sinV0 = Math.sin(deg * Math.PI / 180);
+    const cosV0 = Math.cos(deg * Math.PI / 180);
+    thV.textContent = deg + ' °';
+    sinV.textContent = (sinV0 >= 0 ? '+' : '') + sinV0.toFixed(2);
+    cosV.textContent = (cosV0 >= 0 ? '+' : '') + cosV0.toFixed(2);
+
+    // 単位円
+    {
+      const { ctx, w, h } = ensureSize(wheelC);
+      ctx.clearRect(0, 0, w, h);
+      const cx = w / 2, cy = h / 2;
+      const r = Math.min(w, h) * 0.36;
+      // 座標軸
+      ctx.strokeStyle = '#E5E7EB'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx - r * 1.18, cy); ctx.lineTo(cx + r * 1.18, cy);
+      ctx.moveTo(cx, cy - r * 1.18); ctx.lineTo(cx, cy + r * 1.18);
+      ctx.stroke();
+      // 円
+      ctx.strokeStyle = '#94A3B8'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.stroke();
+      // 点の位置
+      const px = cx + r * cosV0, py = cy - r * sinV0;
+      // 縦(sin)
+      ctx.strokeStyle = '#1D4ED8'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(px, cy); ctx.lineTo(px, py); ctx.stroke();
+      // 横(cos)
+      ctx.strokeStyle = '#7C3AED'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(cx, py); ctx.lineTo(px, py); ctx.stroke();
+      // ラジアル
+      ctx.strokeStyle = '#94A3B8'; ctx.lineWidth = 1.8; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py); ctx.stroke();
+      ctx.setLineDash([]);
+      // 点
+      ctx.fillStyle = 'rgba(225,29,72,0.35)';
+      ctx.beginPath(); ctx.arc(px, py, 13, 0, 2 * Math.PI); ctx.fill();
+      ctx.fillStyle = '#E11D48';
+      ctx.beginPath(); ctx.arc(px, py, 9, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = 'white'; ctx.lineWidth = 2.5; ctx.stroke();
+      // 値ラベル(縦・横)
+      pillLabel(ctx, `sin = ${sinV0.toFixed(2)}`, px + (cosV0 >= 0 ? 12 : -12), (cy + py) / 2, {
+        anchor: cosV0 >= 0 ? 'top-left' : 'top-right',
+        bg: 'rgba(29,78,216,0.95)', fg: 'white',
+        font: '800 13px "Zen Kaku Gothic New", sans-serif', padX: 10, padY: 5
+      });
+      pillLabel(ctx, `cos = ${cosV0.toFixed(2)}`, (cx + px) / 2, py + (sinV0 >= 0 ? -8 : 8), {
+        anchor: sinV0 >= 0 ? 'bottom-center' : 'top-center',
+        bg: 'rgba(124,58,237,0.95)', fg: 'white',
+        font: '800 13px "Zen Kaku Gothic New", sans-serif', padX: 10, padY: 5
+      });
+      // 軸ラベル
+      ctx.font = AXIS_TITLE_FONT; ctx.fillStyle = AXIS_TITLE_COLOR;
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText('+x', cx + r * 1.18 - 4, cy - 12);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('+y', cx + 12, cy - r * 1.18 + 2);
+    }
+
+    // sin / cos の波(0-360°)
+    {
+      const { ctx, w, h } = ensureSize(traceC);
+      ctx.clearRect(0, 0, w, h);
+      const padL = 60, padR = 24, padT = 36, padB = 44;
+      const gx0 = padL, gx1 = w - padR;
+      const gy0 = padT, gy1 = h - padB;
+      const yC = (gy0 + gy1) / 2;
+      // グリッド
+      ctx.strokeStyle = '#EEF2F7'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      [gy0, yC, gy1].forEach((y) => { ctx.moveTo(gx0, y); ctx.lineTo(gx1, y); });
+      [0, 90, 180, 270, 360].forEach((d) => {
+        const x = gx0 + d / 360 * (gx1 - gx0);
+        ctx.moveTo(x, gy0); ctx.lineTo(x, gy1);
+      });
+      ctx.stroke();
+      // 軸線
+      ctx.strokeStyle = '#D1D5DB'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(gx0, gy0); ctx.lineTo(gx0, gy1);
+      ctx.moveTo(gx0, gy1); ctx.lineTo(gx1, gy1);
+      ctx.stroke();
+      // Y ラベル
+      ctx.font = AXIS_TICK_FONT; ctx.fillStyle = AXIS_TICK_COLOR;
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ['+1', '0', '−1'].forEach((s, i) => {
+        const y = i === 0 ? gy0 : (i === 1 ? yC : gy1);
+        ctx.fillText(s, padL - 10, y);
+      });
+      // X ラベル
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      [0, 90, 180, 270, 360].forEach((d) => {
+        const x = gx0 + d / 360 * (gx1 - gx0);
+        ctx.fillText(d + '°', x, gy1 + 10);
+      });
+      // 軸タイトル
+      ctx.font = AXIS_TITLE_FONT; ctx.fillStyle = AXIS_TITLE_COLOR;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText('値', gx0 - 6, 10);
+      ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+      ctx.fillText('角度 [°]', gx1, h - 8);
+      const xOf = (d) => gx0 + d / 360 * (gx1 - gx0);
+      const yOf = (v) => yC - v * (gy1 - gy0) / 2 * 0.92;
+      // sin
+      ctx.strokeStyle = '#1D4ED8'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (let d = 0; d <= 360; d += 2) {
+        const x = xOf(d), y = yOf(Math.sin(d * Math.PI / 180));
+        if (d === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      // cos
+      ctx.strokeStyle = '#7C3AED'; ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      for (let d = 0; d <= 360; d += 2) {
+        const x = xOf(d), y = yOf(Math.cos(d * Math.PI / 180));
+        if (d === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      // 現在位置
+      const px = xOf(deg);
+      ctx.strokeStyle = '#9CA3AF'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(px, gy0); ctx.lineTo(px, gy1); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#1D4ED8';
+      ctx.beginPath(); ctx.arc(px, yOf(sinV0), 8, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.fillStyle = '#7C3AED';
+      ctx.beginPath(); ctx.arc(px, yOf(cosV0), 8, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke();
+      // 凡例
+      pillLabel(ctx, 'sin', gx1 - 6, 10, {
+        anchor: 'top-right', bg: 'rgba(29,78,216,0.95)', fg: 'white',
+        font: '800 12px "Zen Kaku Gothic New", sans-serif', padX: 12, padY: 4
+      });
+      pillLabel(ctx, 'cos', gx1 - 60, 10, {
+        anchor: 'top-right', bg: 'rgba(124,58,237,0.95)', fg: 'white',
+        font: '800 12px "Zen Kaku Gothic New", sans-serif', padX: 12, padY: 4
+      });
+    }
+  };
+
+  th.addEventListener('input', draw);
+  window.addEventListener('resize', draw);
+  window.addEventListener('lec05-slide-change', () => requestAnimationFrame(draw));
+  requestAnimationFrame(draw);
+})();
+
+// slide-7: tan = 影と身長の比
+(() => {
+  const th = document.getElementById('c3-th');
+  const thV = document.getElementById('c3-th-val');
+  const lenV = document.getElementById('c3-shadow-len');
+  const tanV = document.getElementById('c3-tan-val');
+  const c = document.getElementById('c3-shadow');
+  if (!th || !c) return;
+  const height = 1.70;
+
+  const draw = () => {
+    const deg = +th.value;
+    const rad = deg * Math.PI / 180;
+    const tan = Math.tan(rad);
+    const len = height / tan;
+    thV.textContent = deg + ' °';
+    lenV.innerHTML = len.toFixed(2) + ' <span class="stat-unit">m</span>';
+    tanV.textContent = tan.toFixed(3);
+
+    const { ctx, w, h } = ensureSize(c);
+    ctx.clearRect(0, 0, w, h);
+    const ground = h - 40;
+    // 地面
+    ctx.strokeStyle = '#D1D5DB'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(16, ground); ctx.lineTo(w - 16, ground); ctx.stroke();
+    // 人の位置
+    const personX = 120;
+    const scale = Math.min(((w - personX - 80) / Math.max(len, 0.6)), 90);
+    const personH = height * scale;
+    const shadowEnd = personX + len * scale;
+    // 影
+    ctx.strokeStyle = 'rgba(15,23,42,0.45)'; ctx.lineWidth = 12; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(personX, ground); ctx.lineTo(Math.min(shadowEnd, w - 16), ground); ctx.stroke();
+    // 人
+    ctx.strokeStyle = '#1D4ED8'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(personX, ground); ctx.lineTo(personX, ground - personH); ctx.stroke();
+    ctx.fillStyle = '#1D4ED8';
+    ctx.beginPath(); ctx.arc(personX, ground - personH - 10, 10, 0, 2 * Math.PI); ctx.fill();
+    ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
+    // 太陽
+    const sunDist = 260;
+    const sunX = personX + sunDist * Math.cos(rad);
+    const sunY = ground - sunDist * Math.sin(rad);
+    // 太陽の光輪
+    const grad = ctx.createRadialGradient(sunX, sunY, 6, sunX, sunY, 44);
+    grad.addColorStop(0, '#FBBF24'); grad.addColorStop(0.5, 'rgba(251,191,36,0.6)'); grad.addColorStop(1, 'rgba(251,191,36,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(sunX, sunY, 44, 0, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = '#F59E0B';
+    ctx.beginPath(); ctx.arc(sunX, sunY, 18, 0, 2 * Math.PI); ctx.fill();
+    // 光線
+    ctx.strokeStyle = '#FCD34D'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
+    ctx.beginPath(); ctx.moveTo(sunX, sunY); ctx.lineTo(Math.min(shadowEnd, w - 16), ground); ctx.stroke();
+    ctx.setLineDash([]);
+    // ピルラベル
+    pillLabel(ctx, `身長 1.70 m`, personX + 18, ground - personH / 2, {
+      anchor: 'top-left', bg: 'rgba(29,78,216,0.95)', fg: 'white',
+      font: '800 13px "Zen Kaku Gothic New", sans-serif', padX: 10, padY: 5
+    });
+    pillLabel(ctx, `影 ${len.toFixed(2)} m`, (personX + Math.min(shadowEnd, w - 16)) / 2, ground + 12, {
+      anchor: 'top-center', bg: 'rgba(15,23,42,0.9)', fg: 'white',
+      font: '800 13px "Zen Kaku Gothic New", sans-serif', padX: 10, padY: 5
+    });
+    pillLabel(ctx, `太陽 ${deg}°`, sunX + 30, sunY, {
+      anchor: 'top-left', bg: 'rgba(245,158,11,0.95)', fg: 'white',
+      font: '800 13px "Zen Kaku Gothic New", sans-serif', padX: 10, padY: 5
+    });
+  };
+
+  th.addEventListener('input', draw);
+  window.addEventListener('resize', draw);
+  window.addEventListener('lec05-slide-change', () => requestAnimationFrame(draw));
+  requestAnimationFrame(draw);
+})();
+
+// ====================== PART 2: 音 (slide-10) ======================
+(() => {
+  const f = document.getElementById('c4-f');
+  const a = document.getElementById('c4-a');
+  const fV = document.getElementById('c4-f-val');
+  const aV = document.getElementById('c4-a-val');
+  const playBtn = document.getElementById('c4-play');
+  const cT = document.getElementById('c4-T');
+  const cCycles = document.getElementById('c4-cycles');
+  const cFeel = document.getElementById('c4-feel');
+  const osc = document.getElementById('c4-osc');
+  if (!playBtn || !osc) return;
+
+  let audioCtx = null, oscNode = null, gainNode = null, playing = false;
+
+  const labelOf = (hz) => {
+    if (hz < 130) return '低音域';
+    if (Math.abs(hz - 110) < 12) return 'A2';
+    if (Math.abs(hz - 220) < 18) return 'A3';
+    if (Math.abs(hz - 440) < 26) return 'A4 「ラ」';
+    if (Math.abs(hz - 880) < 50) return 'A5';
+    if (Math.abs(hz - 1760) < 100) return 'A6';
+    if (hz < 250) return '低音';
+    if (hz < 500) return '中音';
+    if (hz < 1000) return '高音';
+    return '超高音';
+  };
+
+  const updateAudio = () => {
+    if (!playing || !audioCtx) return;
+    const hz = +f.value, amp = +a.value;
+    oscNode.frequency.setValueAtTime(hz, audioCtx.currentTime);
+    gainNode.gain.setValueAtTime(amp, audioCtx.currentTime);
+  };
+
+  playBtn.addEventListener('click', () => {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (!playing) {
+      oscNode = audioCtx.createOscillator();
+      gainNode = audioCtx.createGain();
+      oscNode.type = 'sine';
+      oscNode.frequency.value = +f.value;
+      gainNode.gain.value = 0;
+      oscNode.connect(gainNode); gainNode.connect(audioCtx.destination);
+      oscNode.start();
+      // フェードイン (耳保護)
+      gainNode.gain.linearRampToValueAtTime(+a.value, audioCtx.currentTime + 0.04);
+      playing = true;
+      playBtn.classList.add('playing');
+      playBtn.textContent = '音を止める';
+    } else {
+      gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.04);
+      const n = oscNode; setTimeout(() => { try { n.stop(); } catch (e) {} }, 60);
+      playing = false;
+      playBtn.classList.remove('playing');
+      playBtn.textContent = '音を鳴らしてみる';
+    }
+  });
+
+  // プリセットボタン
+  document.querySelectorAll('#slide-10 .preset-btn').forEach((b) => {
+    b.addEventListener('click', () => {
+      f.value = +b.dataset.freq;
+      f.dispatchEvent(new Event('input'));
+    });
+  });
+
+  const drawOsc = () => {
+    const hz = +f.value, amp = +a.value;
+    fV.textContent = hz + ' Hz';
+    aV.textContent = amp.toFixed(2);
+    cT.innerHTML = (1000 / hz).toFixed(2) + ' <span class="stat-unit">ミリ秒</span>';
+    // 25 ms ぶんを描く
+    const winMs = 25;
+    cCycles.innerHTML = (hz * winMs / 1000).toFixed(1) + ' <span class="stat-unit">波</span>';
+    cFeel.textContent = labelOf(hz);
+
+    const { ctx, w, h } = ensureSize(osc);
+    ctx.clearRect(0, 0, w, h);
+    const padL = 50, padR = 12, padT = 18, padB = 30;
+    const gx0 = padL, gx1 = w - padR;
+    const gy0 = padT, gy1 = h - padB;
+    const yC = (gy0 + gy1) / 2;
+    // 軸
+    ctx.strokeStyle = '#E5E7EB'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(gx0, gy0); ctx.lineTo(gx0, gy1);
+    ctx.moveTo(gx0, gy1); ctx.lineTo(gx1, gy1);
+    ctx.moveTo(gx0, yC); ctx.lineTo(gx1, yC);
+    ctx.stroke();
+    // 軸ラベル
+    ctx.font = '11px "JetBrains Mono"'; ctx.fillStyle = '#9CA3AF';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText('+1', padL - 6, gy0);
+    ctx.fillText('0', padL - 6, yC);
+    ctx.fillText('−1', padL - 6, gy1);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let m = 0; m <= 25; m += 5) {
+      const x = gx0 + m / winMs * (gx1 - gx0);
+      ctx.fillText(m + ' ms', x, gy1 + 6);
+    }
+    ctx.textAlign = 'left';
+    ctx.fillText('振幅', gx0, 2);
+    ctx.textAlign = 'right';
+    ctx.fillText('時間', gx1, h - 4);
+    // 波形
+    const norm = Math.max(0.05, amp);
+    ctx.strokeStyle = '#B45309'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    const samples = Math.min(900, Math.ceil((gx1 - gx0)));
+    for (let i = 0; i <= samples; i++) {
+      const ms = i / samples * winMs;
+      const v = (amp / 0.5) * Math.sin(2 * Math.PI * hz * ms / 1000);
+      const x = gx0 + i / samples * (gx1 - gx0);
+      const y = yC - v * (gy1 - gy0) / 2 * 0.9;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  };
+
+  f.addEventListener('input', () => { drawOsc(); updateAudio(); });
+  a.addEventListener('input', () => { drawOsc(); updateAudio(); });
+  window.addEventListener('resize', drawOsc);
+  window.addEventListener('lec05-slide-change', () => requestAnimationFrame(drawOsc));
+  requestAnimationFrame(drawOsc);
+
+  // スライドを離れたら自動停止 (耳保護)
+  window.addEventListener('lec05-slide-change', (e) => {
+    if (playing && e.detail && e.detail.target !== 10) {
+      playBtn.click();
+    }
+  });
+})();
+
+// ====================== PART 2 拡張: マイク録音 + 周波数 / 振幅操作 (slide-10) ======================
+// 根本作り直し: MediaRecorder + decodeAudioData は使わず、 ScriptProcessor で
+// 生 PCM サンプルを直接捕獲し、 AudioContext.createBuffer で AudioBuffer を作る。
+// これで codec / decode 失敗の依存性がなくなり、 record/play で同一の AudioContext を使う。
+(() => {
+  const recBtn = document.getElementById('rec-start');
+  const playBtn = document.getElementById('rec-play');
+  const rateSlider = document.getElementById('rec-rate');
+  const gainSlider = document.getElementById('rec-gain');
+  const rateVal = document.getElementById('rec-rate-val');
+  const gainVal = document.getElementById('rec-gain-val');
+  const waveCanvas = document.getElementById('rec-wave');
+  const statusEl = document.getElementById('rec-status');
+  if (!recBtn || !waveCanvas) return;
+
+  let audioCtx = null;
+  let mediaStream = null;
+  let micSource = null;
+  let scriptProc = null;
+  let silentSink = null;
+  let pcmChunks = [];
+  let isRecording = false;
+  let autoStopTimer = null;
+  let audioBuffer = null;
+  let currentSource = null;
+  let currentGain = null;
+  let displayGain = 1.0;
+  let recordedPeak = 0;
+
+  // --- ヘルパ ---
+  const getCtx = async () => {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') {
+      try { await audioCtx.resume(); } catch (e) { /* ignore */ }
+    }
+    return audioCtx;
+  };
+
+  const stopPlayback = () => {
+    if (currentSource) {
+      try { currentSource.stop(); } catch (e) {}
+      try { currentSource.disconnect(); } catch (e) {}
+      currentSource = null;
+    }
+    if (currentGain) {
+      try { currentGain.disconnect(); } catch (e) {}
+      currentGain = null;
+    }
+  };
+
+  const teardownRecording = () => {
+    if (autoStopTimer) { clearTimeout(autoStopTimer); autoStopTimer = null; }
+    if (scriptProc) {
+      try { scriptProc.onaudioprocess = null; } catch (e) {}
+      try { scriptProc.disconnect(); } catch (e) {}
+      scriptProc = null;
+    }
+    if (silentSink) { try { silentSink.disconnect(); } catch (e) {} silentSink = null; }
+    if (micSource) { try { micSource.disconnect(); } catch (e) {} micSource = null; }
+    if (mediaStream) {
+      mediaStream.getTracks().forEach((t) => { try { t.stop(); } catch (e) {} });
+      mediaStream = null;
+    }
+    isRecording = false;
+  };
+
+  // --- 描画 ---
+  // 録音全体のエンベロープを「録音時間軸」 上に描く。
+  // 振幅(gain × displayGain) で 縦スケール、
+  // 再生速度 rate で 横スケール: rate=1 で全幅、 rate=2 で半幅(左寄せ)、
+  // rate=0.5 で全幅(canvas を超える分は clip — 実際の playback time が長くなる)
+  const drawWaveform = () => {
+    const { ctx, w, h } = ensureSize(waveCanvas);
+    ctx.clearRect(0, 0, w, h);
+    const padL = 60, padR = 20, padT = 30, padB = 38;
+    const gx0 = padL, gx1 = w - padR, gy0 = padT, gy1 = h - padB;
+    const yC = (gy0 + gy1) / 2;
+    // グリッド + ゼロ線
+    ctx.strokeStyle = '#EEF2F7'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(gx0, gy0); ctx.lineTo(gx1, gy0);
+    ctx.moveTo(gx0, yC); ctx.lineTo(gx1, yC);
+    ctx.moveTo(gx0, gy1); ctx.lineTo(gx1, gy1);
+    ctx.stroke();
+    ctx.strokeStyle = '#D8E2EE'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(gx0, gy0); ctx.lineTo(gx0, gy1);
+    ctx.moveTo(gx0, gy1); ctx.lineTo(gx1, gy1);
+    ctx.stroke();
+    ctx.font = AXIS_TICK_FONT; ctx.fillStyle = AXIS_TICK_COLOR;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillText('+1', padL - 8, gy0);
+    ctx.fillText('0', padL - 8, yC);
+    ctx.fillText('−1', padL - 8, gy1);
+    ctx.font = AXIS_TITLE_FONT; ctx.fillStyle = AXIS_TITLE_COLOR;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('振幅', gx0 - 6, 8);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText('時間 [秒]', gx1, h - 8);
+
+    if (!audioBuffer) {
+      ctx.font = '700 14px "Zen Kaku Gothic New", sans-serif';
+      ctx.fillStyle = '#75839B'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('録音すると、 ここに波形が表示されます', (gx0 + gx1) / 2, yC);
+      return;
+    }
+
+    const data = audioBuffer.getChannelData(0);
+    const recDur = audioBuffer.duration;
+    const rate = +rateSlider.value;
+    const gain = +gainSlider.value;
+    const visualScale = gain * displayGain;
+    const playbackDur = recDur / rate;
+
+    // 横スケール: x 軸 = 「録音時間」 (固定)。
+    // playback 時にどれだけの時間を占めるかは envelope の表示幅で表現する。
+    // envWidthFrac = playbackDur / recDur = 1 / rate(rate=1 で全幅、 rate=2 で半幅)
+    const envWidthFrac = Math.min(1, 1 / rate);
+    const totalPixels = gx1 - gx0;
+    const envPixels = Math.max(2, Math.floor(totalPixels * envWidthFrac));
+
+    // X 軸目盛(録音時間 0 〜 recDur を canvas 全幅に対応させる)
+    ctx.font = AXIS_TICK_FONT; ctx.fillStyle = AXIS_TICK_COLOR;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    let tickStep;
+    if (recDur <= 1) tickStep = 0.1;
+    else if (recDur <= 2.5) tickStep = 0.25;
+    else if (recDur <= 6) tickStep = 0.5;
+    else tickStep = 1.0;
+    const decimals = tickStep < 1 ? (tickStep < 0.5 ? 2 : 1) : 0;
+    for (let t = 0; t <= recDur + 1e-6; t += tickStep) {
+      const x = gx0 + (t / recDur) * totalPixels;
+      ctx.fillText(t.toFixed(decimals) + ' s', x, gy1 + 10);
+    }
+
+    // playback 終了位置にマーカ(垂直線)
+    const endX = gx0 + envWidthFrac * totalPixels;
+    if (envWidthFrac < 1) {
+      ctx.strokeStyle = 'rgba(74,120,200,0.45)'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(endX, gy0); ctx.lineTo(endX, gy1); ctx.stroke();
+      ctx.setLineDash([]);
+      // ラベル
+      ctx.font = '700 10px "JetBrains Mono", "Zen Kaku Gothic New", sans-serif';
+      ctx.fillStyle = '#2E5894'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText(' 再生終了', endX + 2, gy0 + 4);
+    }
+
+    // エンベロープ — 録音全体を envPixels 個に圧縮して描く
+    ctx.strokeStyle = '#2C3E69'; ctx.lineWidth = 1.5; ctx.lineCap = 'butt';
+    ctx.beginPath();
+    for (let px = 0; px < envPixels; px++) {
+      const frac0 = px / envPixels;
+      const frac1 = (px + 1) / envPixels;
+      const i0 = Math.floor(frac0 * data.length);
+      const i1 = Math.max(i0 + 1, Math.min(data.length, Math.ceil(frac1 * data.length)));
+      let min = 1, max = -1;
+      for (let j = i0; j < i1; j++) {
+        const v = data[j];
+        if (v < min) min = v;
+        if (v > max) max = v;
+      }
+      let minS = min * visualScale;
+      let maxS = max * visualScale;
+      if (minS < -1) minS = -1;
+      if (maxS > 1) maxS = 1;
+      const yMin = yC - maxS * (gy1 - gy0) / 2 * 0.95;
+      const yMax = yC - minS * (gy1 - gy0) / 2 * 0.95;
+      ctx.moveTo(gx0 + px + 0.5, yMin);
+      ctx.lineTo(gx0 + px + 0.5, yMax);
+    }
+    ctx.stroke();
+
+    // ヘッダー情報
+    ctx.font = '700 11px "JetBrains Mono", "Zen Kaku Gothic New", sans-serif';
+    ctx.fillStyle = '#75839B'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(`再生時間 ${playbackDur.toFixed(2)} 秒(録音 ${recDur.toFixed(2)} 秒 × 速度 ${rate.toFixed(2)})`, gx0, 8);
+    ctx.textAlign = 'right';
+    if (displayGain > 1.05) ctx.fillText(`表示倍率 ${displayGain.toFixed(1)}×`, gx1, 8);
+  };
+
+  // --- 録音終了処理 (チャンクを結合 → AudioBuffer 化) ---
+  const finalizeRecording = async () => {
+    teardownRecording();
+    recBtn.textContent = '声を録音する';
+    recBtn.classList.remove('playing');
+
+    if (!pcmChunks.length) {
+      statusEl.textContent = '録音データが取得できませんでした。';
+      pcmChunks = [];
+      return;
+    }
+
+    const ctx = await getCtx();
+    let totalLen = 0;
+    for (const c of pcmChunks) totalLen += c.length;
+    if (totalLen === 0) {
+      statusEl.textContent = '録音データが空でした。';
+      pcmChunks = [];
+      return;
+    }
+
+    // AudioBuffer をその場で生成(decode 不要)
+    audioBuffer = ctx.createBuffer(1, totalLen, ctx.sampleRate);
+    const target = audioBuffer.getChannelData(0);
+    let off = 0;
+    for (const c of pcmChunks) { target.set(c, off); off += c.length; }
+    pcmChunks = [];
+
+    // ピーク測定 + 表示倍率算出
+    let peak = 0;
+    for (let i = 0; i < totalLen; i++) {
+      const a = Math.abs(target[i]);
+      if (a > peak) peak = a;
+    }
+    recordedPeak = peak;
+    displayGain = peak > 0.001 ? Math.min(10, Math.max(1, 0.7 / peak)) : 1.0;
+
+    let msg = `録音完了 — ${audioBuffer.duration.toFixed(2)} 秒 / ${ctx.sampleRate} Hz`;
+    if (peak < 0.02) msg += ` ／ 音量が極めて小さい(マイク入力の確認推奨)`;
+    else if (peak < 0.1) msg += ` ／ 音量が小さいため表示を ${displayGain.toFixed(1)} 倍に拡大`;
+    else if (displayGain > 1.05) msg += ` ／ 表示倍率 ${displayGain.toFixed(1)}×`;
+    statusEl.textContent = msg;
+
+    playBtn.disabled = false;
+    drawWaveform();
+  };
+
+  // --- 録音開始 / 停止 ---
+  recBtn.addEventListener('click', async () => {
+    if (isRecording) {
+      await finalizeRecording();
+      return;
+    }
+
+    // 状態リセット
+    stopPlayback();
+    audioBuffer = null;
+    displayGain = 1.0;
+    recordedPeak = 0;
+    pcmChunks = [];
+    playBtn.disabled = true;
+    drawWaveform();
+
+    // AudioContext をユーザクリック直後の同期文脈で起動
+    const ctx = await getCtx();
+
+    // マイク取得
+    try {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      statusEl.textContent = 'マイクが使えません: ' + (e.message || e.name);
+      return;
+    }
+
+    // 録音グラフ: micSource → scriptProc → silentSink(gain=0) → destination
+    //   ScriptProcessor は destination に繋がないと onaudioprocess が呼ばれないため、
+    //   音が漏れないよう gain=0 の sink を経由する。
+    try {
+      micSource = ctx.createMediaStreamSource(mediaStream);
+      const procFn = ctx.createScriptProcessor || ctx.createJavaScriptNode;
+      scriptProc = procFn.call(ctx, 4096, 1, 1);
+      silentSink = ctx.createGain();
+      silentSink.gain.value = 0;
+
+      scriptProc.onaudioprocess = (e) => {
+        if (!isRecording) return;
+        const input = e.inputBuffer.getChannelData(0);
+        // input は次回呼び出しで再利用されるためコピーする
+        pcmChunks.push(new Float32Array(input));
+      };
+
+      micSource.connect(scriptProc);
+      scriptProc.connect(silentSink);
+      silentSink.connect(ctx.destination);
+    } catch (e) {
+      statusEl.textContent = '録音セットアップ失敗: ' + (e.message || e.name);
+      teardownRecording();
+      return;
+    }
+
+    isRecording = true;
+    recBtn.textContent = '録音中(タップで停止)';
+    recBtn.classList.add('playing');
+    statusEl.textContent = '録音中…(最大 3 秒)';
+    autoStopTimer = setTimeout(() => { if (isRecording) finalizeRecording(); }, 3000);
+  });
+
+  // --- 再生 ---
+  playBtn.addEventListener('click', async () => {
+    if (!audioBuffer) return;
+    stopPlayback();
+    const ctx = await getCtx();
+    try {
+      const src = ctx.createBufferSource();
+      src.buffer = audioBuffer;
+      src.playbackRate.value = +rateSlider.value;
+      const g = ctx.createGain();
+      g.gain.value = +gainSlider.value;
+      src.connect(g);
+      g.connect(ctx.destination);
+      src.onended = () => {
+        if (currentSource === src) {
+          try { src.disconnect(); } catch (e) {}
+          try { g.disconnect(); } catch (e) {}
+          currentSource = null;
+          currentGain = null;
+        }
+      };
+      src.start();
+      currentSource = src;
+      currentGain = g;
+    } catch (e) {
+      statusEl.textContent = '再生エラー: ' + (e.message || e.name);
+    }
+  });
+
+  // --- スライダー ---
+  rateSlider.addEventListener('input', () => {
+    const v = +rateSlider.value;
+    rateVal.textContent = v.toFixed(2) + ' 倍';
+    if (currentSource) {
+      try { currentSource.playbackRate.value = v; } catch (e) {}
+    }
+    drawWaveform();
+  });
+  gainSlider.addEventListener('input', () => {
+    const v = +gainSlider.value;
+    gainVal.textContent = v.toFixed(2);
+    if (currentGain) {
+      try { currentGain.gain.value = v; } catch (e) {}
+    }
+    drawWaveform();
+  });
+
+  // 初期化
+  drawWaveform();
+  window.addEventListener('resize', drawWaveform);
+
+  // 別スライドへ移動したら再生・録音を停止
+  window.addEventListener('lec05-slide-change', (e) => {
+    if (e.detail && e.detail.target !== 10) {
+      stopPlayback();
+      if (isRecording) finalizeRecording();
+    }
+  });
+})();
+
+// ====================== PART 3: 気温フィット (slide-12, slide-13) ======================
+// 東京の月別平均気温（平年値 1991-2020、気象庁）
+const TOKYO_TEMP = [
+  { m: 1, v: 5.4 }, { m: 2, v: 6.1 }, { m: 3, v: 9.4 }, { m: 4, v: 14.3 },
+  { m: 5, v: 18.8 }, { m: 6, v: 21.9 }, { m: 7, v: 25.7 }, { m: 8, v: 26.9 },
+  { m: 9, v: 23.3 }, { m: 10, v: 18.0 }, { m: 11, v: 12.5 }, { m: 12, v: 7.7 }
+];
+const TEMP_MEAN = TOKYO_TEMP.reduce((s, p) => s + p.v, 0) / TOKYO_TEMP.length; // 約 15.8
+
+// slide-12: 月別気温データ表示
+(() => {
+  const c = document.getElementById('c5-data');
+  if (!c) return;
+  new Chart(c.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: TOKYO_TEMP.map(p => p.m + '月'),
+      datasets: [{
+        label: '東京の月別平均気温（℃）',
+        data: TOKYO_TEMP.map(p => p.v),
+        backgroundColor: TOKYO_TEMP.map(p => {
+          // 夏は赤系、 冬は青系
+          if (p.v >= 22) return '#E11D48';
+          if (p.v >= 16) return '#F59E0B';
+          if (p.v >= 10) return '#10B981';
+          return '#1D4ED8';
+        }),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#1F2937', titleColor: 'white', bodyColor: '#E5E7EB', padding: 10, cornerRadius: 6, callbacks: { label: (ctx) => ctx.parsed.y + ' ℃' } }
+      },
+      scales: {
+        y: { min: 0, max: 30, grid: { color: '#F3F4F6' }, title: { display: true, text: '気温（℃）' } },
+        x: { grid: { display: false }, title: { display: true, text: '月' } }
+      }
+    }
+  });
+})();
+
+// slide-13: sin フィット
+(() => {
+  const A = document.getElementById('c6-A'), C = document.getElementById('c6-C'), P = document.getElementById('c6-P');
+  const aV = document.getElementById('c6-A-val'), cV = document.getElementById('c6-C-val'), pV = document.getElementById('c6-P-val');
+  const eqA = document.getElementById('c6-eq-A'), eqC = document.getElementById('c6-eq-C'), eqP = document.getElementById('c6-eq-P');
+  const rmseEl = document.getElementById('c6-rmse');
+  const mayEl = document.getElementById('c6-may');
+  const bestBtn = document.getElementById('c6-best');
+  const resetBtn = document.getElementById('c6-reset');
+  const fitC = document.getElementById('c6-fit');
+  if (!A || !fitC) return;
+
+  const predict = (m, amp, ctr, phase) => ctr + amp * Math.sin(2 * Math.PI * (m - phase) / 12 + Math.PI / 2);
+
+  const rmse = (amp, ctr, phase) => {
+    let s = 0;
+    TOKYO_TEMP.forEach(p => { const r = predict(p.m, amp, ctr, phase) - p.v; s += r * r; });
+    return Math.sqrt(s / TOKYO_TEMP.length);
+  };
+
+  // 最良の振幅・中心・位相を粗探索
+  const findBest = () => {
+    let best = { e: Infinity, A: 10, C: 15, P: 7 };
+    for (let cc = 12; cc <= 20; cc += 0.2) {
+      for (let aa = 6; aa <= 14; aa += 0.2) {
+        for (let pp = 5; pp <= 9; pp += 0.2) {
+          const e = rmse(aa, cc, pp);
+          if (e < best.e) best = { e, A: aa, C: cc, P: pp };
+        }
+      }
+    }
+    return best;
+  };
+
+  const ctx = fitC.getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: '実測（東京 1991-2020）', data: TOKYO_TEMP.map(p => ({ x: p.m, y: p.v })), pointBackgroundColor: '#059669', pointBorderColor: 'white', pointBorderWidth: 2, pointRadius: 7, showLine: false, order: 2 },
+        { label: '予測（sin の波）', data: [], borderColor: '#7C3AED', borderWidth: 3, pointRadius: 0, showLine: true, fill: false, tension: 0.2, order: 1 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', labels: { boxWidth: 14, padding: 12, usePointStyle: true } },
+        tooltip: { backgroundColor: '#1F2937', titleColor: 'white', bodyColor: '#E5E7EB', padding: 10, cornerRadius: 6 }
+      },
+      scales: {
+        y: { min: 0, max: 32, grid: { color: '#F3F4F6' }, title: { display: true, text: '気温（℃）' } },
+        x: { min: 0.5, max: 12.5, type: 'linear', grid: { color: '#F3F4F6' }, title: { display: true, text: '月' }, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+
+  const update = () => {
+    const amp = +A.value, ctr = +C.value, phase = +P.value;
+    aV.textContent = amp.toFixed(1); cV.textContent = ctr.toFixed(1); pV.textContent = phase.toFixed(1) + ' 月';
+    eqA.textContent = amp.toFixed(1); eqC.textContent = ctr.toFixed(1); eqP.textContent = phase.toFixed(1);
+    const pts = [];
+    for (let m = 0.5; m <= 12.5; m += 0.1) pts.push({ x: m, y: predict(m, amp, ctr, phase) });
+    chart.data.datasets[1].data = pts;
+    chart.update();
+    rmseEl.innerHTML = rmse(amp, ctr, phase).toFixed(2) + ' <span class="stat-unit">℃</span>';
+    mayEl.innerHTML = predict(5, amp, ctr, phase).toFixed(1) + ' <span class="stat-unit">℃</span>';
+  };
+
+  A.addEventListener('input', update);
+  C.addEventListener('input', update);
+  P.addEventListener('input', update);
+  bestBtn.addEventListener('click', () => {
+    const best = findBest();
+    A.value = best.A.toFixed(1); C.value = best.C.toFixed(1); P.value = best.P.toFixed(1);
+    update();
+  });
+  resetBtn.addEventListener('click', () => {
+    A.value = 10; C.value = 16; P.value = 7;
+    update();
+  });
+  update();
+})();
+
+// ====================== PART 3 拡張: 経済(駅前カフェの週次サイクル) (slide-14, slide-15) ======================
+// 架空データ：56 日ぶんの売上（中心 100、 振幅 20、 位相 5(金) + 弱いノイズ）
+const CAFE_SALES = (() => {
+  const rng = (() => { let s = 7; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280; }; })();
+  const arr = [];
+  for (let d = 1; d <= 56; d++) {
+    const periodic = 20 * Math.sin(2 * Math.PI * (d - 5) / 7 + Math.PI / 2);
+    const noise = (rng() - 0.5) * 12;
+    arr.push({ d, v: Math.round(100 + periodic + noise) });
+  }
+  return arr;
+})();
+
+// slide-14: 時系列 + 曜日別平均
+(() => {
+  const tsC = document.getElementById('cWeek-ts');
+  const dowC = document.getElementById('cWeek-dow');
+  if (!tsC || !dowC) return;
+
+  // 時系列バー
+  new Chart(tsC.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: CAFE_SALES.map(p => p.d),
+      datasets: [{
+        label: '日別売上（杯）',
+        data: CAFE_SALES.map(p => p.v),
+        backgroundColor: CAFE_SALES.map(p => {
+          const dow = (p.d - 1) % 7; // 0=月, 5=土, 6=日
+          return (dow >= 4) ? '#B45309' : '#FBBF24';
+        }),
+        borderRadius: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#1F2937', titleColor: 'white', bodyColor: '#E5E7EB', padding: 8, cornerRadius: 6, callbacks: { title: (i) => `${i[0].parsed.x} 日目`, label: (c) => c.parsed.y + ' 杯' } }
+      },
+      scales: {
+        y: { min: 50, max: 160, grid: { color: '#F3F4F6' }, title: { display: true, text: '売上（杯）' } },
+        x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 8 }, title: { display: true, text: '日付（観測 1 日目〜56 日目）' } }
+      }
+    }
+  });
+
+  // 曜日別平均
+  const dowSum = [0, 0, 0, 0, 0, 0, 0];
+  const dowCnt = [0, 0, 0, 0, 0, 0, 0];
+  CAFE_SALES.forEach(p => { const dow = (p.d - 1) % 7; dowSum[dow] += p.v; dowCnt[dow]++; });
+  const dowAvg = dowSum.map((s, i) => s / dowCnt[i]);
+  const dowLabels = ['月', '火', '水', '木', '金', '土', '日'];
+  new Chart(dowC.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: dowLabels,
+      datasets: [{
+        label: '曜日別平均売上（杯）',
+        data: dowAvg,
+        backgroundColor: dowLabels.map((_, i) => i >= 4 ? '#B45309' : '#FBBF24'),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#1F2937', titleColor: 'white', bodyColor: '#E5E7EB', padding: 10, cornerRadius: 6, callbacks: { label: (c) => c.parsed.y.toFixed(1) + ' 杯' } }
+      },
+      scales: {
+        y: { min: 60, max: 140, grid: { color: '#F3F4F6' }, title: { display: true, text: '平均売上（杯）' } },
+        x: { grid: { display: false }, title: { display: true, text: '曜日' } }
+      }
+    }
+  });
+})();
+
+// slide-15: 週次 sin フィット
+(() => {
+  const A = document.getElementById('cW-A'), C = document.getElementById('cW-C'), P = document.getElementById('cW-P');
+  const aV = document.getElementById('cW-A-val'), cV = document.getElementById('cW-C-val'), pV = document.getElementById('cW-P-val');
+  const eqA = document.getElementById('cW-eq-A'), eqC = document.getElementById('cW-eq-C'), eqP = document.getElementById('cW-eq-P');
+  const rmseEl = document.getElementById('cW-rmse'), friEl = document.getElementById('cW-fri'), tueEl = document.getElementById('cW-tue');
+  const bestBtn = document.getElementById('cW-best'), resetBtn = document.getElementById('cW-reset');
+  const fitC = document.getElementById('cW-fit');
+  if (!A || !fitC) return;
+
+  // d は 1-origin。 曜日 dow = ((d-1) % 7)、 0=月..6=日
+  // phase φ は「ピークが (d-1) % 7 = φ-1 の日に来る」 と読む。 1=月..7=日 で表現
+  const predict = (d, amp, ctr, phase) => ctr + amp * Math.sin(2 * Math.PI * ((d - phase) / 7) + Math.PI / 2);
+
+  const rmse = (amp, ctr, phase) => {
+    let s = 0;
+    CAFE_SALES.forEach(p => { const r = predict(p.d, amp, ctr, phase) - p.v; s += r * r; });
+    return Math.sqrt(s / CAFE_SALES.length);
+  };
+
+  const findBest = () => {
+    let best = { e: Infinity, A: 20, C: 100, P: 5 };
+    for (let cc = 80; cc <= 120; cc += 1) {
+      for (let aa = 10; aa <= 30; aa += 1) {
+        for (let pp = 0; pp <= 7; pp += 0.2) {
+          const e = rmse(aa, cc, pp);
+          if (e < best.e) best = { e, A: aa, C: cc, P: pp };
+        }
+      }
+    }
+    return best;
+  };
+
+  const dayName = (phase) => {
+    const names = ['日', '月', '火', '水', '木', '金', '土', '日'];
+    const i = Math.round(phase) % 7;
+    return names[i] || '月';
+  };
+
+  const ctx = fitC.getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: '実測（駅前カフェ 56 日）', data: CAFE_SALES.map(p => ({ x: p.d, y: p.v })), pointBackgroundColor: '#B45309', pointBorderColor: 'white', pointBorderWidth: 1.5, pointRadius: 4, showLine: false, order: 2 },
+        { label: '予測（週 7 日 sin）', data: [], borderColor: '#7C3AED', borderWidth: 3, pointRadius: 0, showLine: true, fill: false, tension: 0, order: 1 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', labels: { boxWidth: 14, padding: 12, usePointStyle: true } },
+        tooltip: { backgroundColor: '#1F2937', titleColor: 'white', bodyColor: '#E5E7EB', padding: 10, cornerRadius: 6 }
+      },
+      scales: {
+        y: { min: 50, max: 160, grid: { color: '#F3F4F6' }, title: { display: true, text: '売上（杯）' } },
+        x: { min: 1, max: 56, type: 'linear', grid: { color: '#F3F4F6' }, title: { display: true, text: '日付' }, ticks: { stepSize: 7 } }
+      }
+    }
+  });
+
+  const update = () => {
+    const amp = +A.value, ctr = +C.value, phase = +P.value;
+    aV.textContent = amp; cV.textContent = ctr; pV.textContent = phase.toFixed(1) + ' (' + dayName(phase) + ')';
+    eqA.textContent = amp; eqC.textContent = ctr; eqP.textContent = phase.toFixed(1);
+    const pts = [];
+    for (let d = 1; d <= 56; d += 0.25) pts.push({ x: d, y: predict(d, amp, ctr, phase) });
+    chart.data.datasets[1].data = pts;
+    chart.update();
+    rmseEl.innerHTML = rmse(amp, ctr, phase).toFixed(1) + ' <span class="stat-unit">杯</span>';
+    // 来週 = 57-63 日として、 金曜 = 61 日 (1=月日), 火曜 = 58 日
+    friEl.innerHTML = predict(61, amp, ctr, phase).toFixed(0) + ' <span class="stat-unit">杯</span>';
+    tueEl.innerHTML = predict(58, amp, ctr, phase).toFixed(0) + ' <span class="stat-unit">杯</span>';
+  };
+
+  A.addEventListener('input', update);
+  C.addEventListener('input', update);
+  P.addEventListener('input', update);
+  bestBtn.addEventListener('click', () => {
+    const best = findBest();
+    A.value = Math.round(best.A); C.value = Math.round(best.C); P.value = best.P.toFixed(1);
+    update();
+  });
+  resetBtn.addEventListener('click', () => { A.value = 20; C.value = 100; P.value = 5; update(); });
+  update();
+})();
+
+// ====================== PART 4: うなり と 矩形波 ======================
+// slide-17: 2つの sin の和（うなり）
+(() => {
+  const f1 = document.getElementById('c7-f1'), f2 = document.getElementById('c7-f2');
+  const f1V = document.getElementById('c7-f1-val'), f2V = document.getElementById('c7-f2-val');
+  const eqF1 = document.getElementById('c7-eq-f1'), eqF2 = document.getElementById('c7-eq-f2');
+  const meanEl = document.getElementById('c7-mean'), beatEl = document.getElementById('c7-beat'), beatTEl = document.getElementById('c7-beatT');
+  const c = document.getElementById('c7-sum');
+  if (!f1 || !c) return;
+
+  // 横軸：0〜2 秒
+  const T_WIN = 2;
+  const N_SAMPLES = 600;
+  const labels = [];
+  for (let i = 0; i <= N_SAMPLES; i++) labels.push(((i / N_SAMPLES) * T_WIN).toFixed(3));
+
+  const chart = new Chart(c.getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: '波 1', data: [], borderColor: '#93C5FD', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0 },
+      { label: '波 2', data: [], borderColor: '#FDA4AF', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0 },
+      { label: '足したもの', data: [], borderColor: '#7C3AED', borderWidth: 3, pointRadius: 0, fill: false, tension: 0 },
+      { label: 'うなり包絡', data: [], borderColor: '#0F172A', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0, fill: false, tension: 0 }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', labels: { boxWidth: 14, padding: 12, usePointStyle: true } },
+        tooltip: { enabled: false }
+      },
+      scales: {
+        y: { min: -2.5, max: 2.5, grid: { color: '#F3F4F6' }, title: { display: true, text: '波の高さ' } },
+        x: { grid: { color: '#F3F4F6' }, title: { display: true, text: '時間（秒）' }, ticks: { maxTicksLimit: 9, callback: (v) => (+labels[v]).toFixed(1) } }
+      }
+    }
+  });
+
+  const update = () => {
+    const a = +f1.value, b = +f2.value;
+    f1V.textContent = a.toFixed(1) + ' Hz';
+    f2V.textContent = b.toFixed(1) + ' Hz';
+    eqF1.textContent = a.toFixed(1); eqF2.textContent = b.toFixed(1);
+    const w1 = [], w2 = [], sum = [], env = [];
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const t = (i / N_SAMPLES) * T_WIN;
+      const y1 = Math.sin(2 * Math.PI * a * t);
+      const y2 = Math.sin(2 * Math.PI * b * t);
+      w1.push(y1); w2.push(y2); sum.push(y1 + y2);
+      env.push(2 * Math.abs(Math.cos(Math.PI * (a - b) * t)));
+    }
+    chart.data.datasets[0].data = w1;
+    chart.data.datasets[1].data = w2;
+    chart.data.datasets[2].data = sum;
+    chart.data.datasets[3].data = env;
+    chart.update();
+    const beat = Math.abs(a - b);
+    meanEl.innerHTML = ((a + b) / 2).toFixed(2) + ' <span class="stat-unit">Hz</span>';
+    beatEl.innerHTML = beat.toFixed(2) + ' <span class="stat-unit">Hz</span>';
+    beatTEl.innerHTML = beat < 0.01 ? '∞' : (1 / beat).toFixed(2) + ' <span class="stat-unit">秒</span>';
+  };
+
+  f1.addEventListener('input', update);
+  f2.addEventListener('input', update);
+  update();
+})();
+
+// slide-18: 矩形波（奇数倍の sin の和）
+(() => {
+  const N = document.getElementById('c8-N');
+  const Nv = document.getElementById('c8-N-val');
+  const sN = document.getElementById('c8-stat-N');
+  const sTop = document.getElementById('c8-stat-top');
+  const c = document.getElementById('c8-square');
+  if (!N || !c) return;
+
+  const N_SAMPLES = 800;
+  const labels = [];
+  for (let i = 0; i <= N_SAMPLES; i++) labels.push(i);
+
+  const chart = new Chart(c.getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: '目標：矩形波（理想）', data: [], borderColor: '#9CA3AF', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0, fill: false, tension: 0 },
+      { label: 'いまの足し算', data: [], borderColor: '#7C3AED', borderWidth: 2.8, pointRadius: 0, fill: false, tension: 0 }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', labels: { boxWidth: 14, padding: 12, usePointStyle: true } },
+        tooltip: { enabled: false }
+      },
+      scales: {
+        y: { min: -1.4, max: 1.4, grid: { color: '#F3F4F6' }, title: { display: true, text: '波の高さ' } },
+        x: { grid: { color: '#F3F4F6' }, title: { display: true, text: '時間（任意単位）' }, ticks: { display: false } }
+      }
+    }
+  });
+
+  const update = () => {
+    const n = +N.value;
+    Nv.textContent = n;
+    sN.innerHTML = n + ' <span class="stat-unit">本</span>';
+    sTop.innerHTML = (2 * n - 1) + ' <span class="stat-unit">倍</span>';
+    const target = [], sum = [];
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const t = (i / N_SAMPLES) * 2 * Math.PI; // 1 周期ぶん
+      // 目標：矩形波 (sign of sin)
+      target.push(Math.sin(t) >= 0 ? 1 : -1);
+      // 足し算：sin t + (1/3) sin 3t + (1/5) sin 5t + ... (4/π を最後にスケーリングして ±1 に正規化)
+      let s = 0;
+      for (let k = 1; k <= n; k++) {
+        const odd = 2 * k - 1;
+        s += Math.sin(odd * t) / odd;
+      }
+      s *= 4 / Math.PI;
+      sum.push(s);
+    }
+    chart.data.datasets[0].data = target;
+    chart.data.datasets[1].data = sum;
+    chart.update();
+  };
+
+  N.addEventListener('input', update);
+  update();
+})();
+
+// ====================== PART 5: Lissajous (slide-20) ======================
+(() => {
+  const aS = document.getElementById('c9-a'), bS = document.getElementById('c9-b'), pS = document.getElementById('c9-p');
+  const aV = document.getElementById('c9-a-val'), bV = document.getElementById('c9-b-val'), pV = document.getElementById('c9-p-val');
+  const eqA = document.getElementById('c9-eq-a'), eqB = document.getElementById('c9-eq-b'), eqP = document.getElementById('c9-eq-p');
+  const c = document.getElementById('c9-lissajous');
+  if (!aS || !c) return;
+
+  const draw = () => {
+    const a = +aS.value, b = +bS.value, phaseDeg = +pS.value;
+    const phase = phaseDeg * Math.PI / 180;
+    aV.textContent = a; bV.textContent = b; pV.textContent = phaseDeg + ' °';
+    eqA.textContent = a; eqB.textContent = b; eqP.textContent = phaseDeg + '°';
+
+    const { ctx, w, h } = ensureSize(c);
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2, cy = h / 2;
+    const R = Math.min(w, h) * 0.42;
+    // 枠
+    ctx.strokeStyle = '#E5E7EB'; ctx.lineWidth = 1;
+    ctx.strokeRect(cx - R, cy - R, R * 2, R * 2);
+    // 軸
+    ctx.beginPath();
+    ctx.moveTo(cx - R, cy); ctx.lineTo(cx + R, cy);
+    ctx.moveTo(cx, cy - R); ctx.lineTo(cx, cy + R);
+    ctx.stroke();
+    // 軌跡（最大公約数の周期だけ描画）
+    const gcd = (x, y) => y === 0 ? x : gcd(y, x % y);
+    const g = gcd(a, b);
+    const period = 2 * Math.PI * (a * b / g) / Math.max(a, b);
+    const N = 1200;
+    const grad = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
+    grad.addColorStop(0, '#E11D48');
+    grad.addColorStop(0.5, '#F59E0B');
+    grad.addColorStop(1, '#7C3AED');
+    ctx.strokeStyle = grad; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const t = i / N * period;
+      const x = cx + R * Math.sin(a * t + phase);
+      const y = cy - R * Math.sin(b * t);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    // a:b ラベル
+    ctx.font = '700 14px "JetBrains Mono"';
+    ctx.fillStyle = '#1F2937'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(`a : b = ${a} : ${b}`, 12, 12);
+    ctx.fillStyle = '#9CA3AF'; ctx.font = '11px "JetBrains Mono"';
+    ctx.fillText(`φ = ${phaseDeg}°`, 12, 30);
+  };
+
+  aS.addEventListener('input', draw);
+  bS.addEventListener('input', draw);
+  pS.addEventListener('input', draw);
+  document.querySelectorAll('#slide-20 .preset-btn').forEach((b) => {
+    b.addEventListener('click', () => {
+      const [a, bb, p] = b.dataset.lp.split(',').map(Number);
+      aS.value = a; bS.value = bb; pS.value = p;
+      draw();
+    });
+  });
+  window.addEventListener('resize', draw);
+  window.addEventListener('lec05-slide-change', () => requestAnimationFrame(draw));
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
