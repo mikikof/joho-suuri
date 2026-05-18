@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-平成国際大学 情報デザイン学部「情報数理入門」の講義スライド集（monorepo）。各回は方程式・不等式・連立方程式・指数関数などを、スライダー操作 + Chart.js のグラフでインタラクティブに見せる、単一ページの教材。本文・UI 文言はすべて日本語。
+平成国際大学 情報デザイン学部「情報数理入門」の講義スライド集（monorepo）。各回は方程式・不等式・連立方程式・指数関数・三角関数などを、スライダー操作 + Chart.js / 素の Canvas でインタラクティブに見せる、単一ページの教材。本文・UI 文言はすべて日本語。
+
+**参照モデル: `lec05/index.html`** (最新の規約と構成を反映)。 lec02-04 は過渡期の素材として参照する。
 
 ## ディレクトリ構成
 
@@ -12,35 +14,74 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 /                     ルート目次ページ（各回へのリンク）
   index.html
   lec02/              第2回 — 式で世界を動かす
+  lec03/              第3回 — 図形と方程式
+  lec04/              第4回 — 1 次関数と 2 次関数
+  lec05/              第5回 — 周期と、波 (★ 参照モデル)
     index.html        対話型 web スライド (本体)
-    情報数理入門_第2回.pdf    配布/印刷用スライド (将来 pptx に置き換え予定)
-    情報数理入門_第2回.xlsx   演習ワークブック
+    情報数理入門_第N回.pdf    配布/印刷用スライド (将来 pptx に置き換え予定)
+    情報数理入門_第N回.xlsx   演習ワークブック
   lecNN/              （今後の回。同じ構造で追加）
 ```
 
-各回は完全に独立した `lecNN/index.html` 1 枚で完結する（共通モジュールは持たない）。新しい回を作る時は既存の `lec02/index.html` をコピーして開始するのが最短。ルートの `index.html` は単なる目次なので、回を追加したら `.lec-list` にカードを 1 つ足す。
+各回は完全に独立した `lecNN/index.html` 1 枚で完結する（共通モジュールは持たない）。新しい回を作る時は **`lec05/index.html` をコピーして開始**するのが最短。ルートの `index.html` は単なる目次なので、回を追加したら `.lec-list` にカードを 1 つ足す。
 
 ## 新しい回を作る時のルール — 必ず守る
 
 **この順番・段階で進める。同時並行や順序入れ替えは禁止。** 詳細は `.claude/skills/new-lecture/SKILL.md` / `TEMPLATE_GUIDE.md` / `EXCEL_GUIDE.md` を参照。
 
-1. **HTML (`lecNN/index.html`) を最初に作る** — テーマと参考資料 (web/画像/URL) を取り込み、`lec02/index.html` をコピーしてベースにする。これが講義の本体・真実の源 (source of truth)
-2. **ユーザー確認** — HTML が完成したら必ず停止し、ユーザーに「OK か / 修正点があるか」を聞く。承認なしに次へ進まない
-3. **Excel (`lecNN/情報数理入門_第N回.xlsx`) を作る** — HTML の内容と必ずタイアップさせる (PART 構成・お題・数式を一致させる)。HTML の例題より一段レベルアップした演習問題を含める
-4. **再度ユーザー確認** — Excel 完成後も停止し、確認をもらう
-5. **PPTX (`lecNN/情報数理入門_第N回.pptx`) は要求があった時のみ作る** — ユーザーから「pptx も作って」など明示的に頼まれない限り着手しない。聞かれてないのに作らない
+1. **HTML (`lecNN/index.html`) を最初に作る** — テーマと参考資料 (web/画像/URL) を取り込み、 **`lec05/index.html` をコピーしてベース**にする。 これが講義の本体・真実の源 (source of truth)
+   - **冒頭の「これまでの振り返り」 スライド (slide-2) は必須** (各回 N ≥ 2)。 `lec-review-slide` skill が担当
+2. **HTML 完成直後・ユーザー確認の前に sub-skill 2 つを必ず通す**:
+   - **`lec-voice-audit`** — AI 臭・大主語+抽象動詞メタファー・スローガン調・二重修飾の検出と修正
+   - **`lec-content-check`** — 数値・概念・用語統一・SUMMARY パラメータ漏れの検出と修正
+3. **ユーザー確認** — sub-skill 修正後に「OK か / 修正点があるか」を聞く。承認なしに次へ進まない
+4. **Excel (`lecNN/情報数理入門_第N回.xlsx`) を作る** — HTML の内容と必ずタイアップさせる (PART 構成・お題・数式を一致させる)。HTML の例題より一段レベルアップした演習問題を含める
+5. **再度ユーザー確認** — Excel 完成後も停止し、確認をもらう
+6. **PPTX (`lecNN/情報数理入門_第N回.pptx`) は要求があった時のみ作る** — ユーザーから「pptx も作って」など明示的に頼まれない限り着手しない。聞かれてないのに作らない
 
 参考資料の取り込み方:
 - 参考 URL → WebFetch / WebSearch
 - 既存 PDF / 画像 / pptx → Read
 - 教科書・シラバス指定 → ユーザーに確認
 
-## スライド構成の方針 (lec03 で確立)
+### sub-skill 一覧 (`.claude/skills/` 配下)
+
+| skill | 役割 | 呼び出しタイミング |
+|---|---|---|
+| `new-lecture` | hub orchestrator。 全体フロー (Phase 1-3) | 新しい回を作るとき |
+| `lec-review-slide` | 冒頭 slide-2「これまでの振り返り」 を生成 | Phase 1 HTML 構築中 |
+| `lec-voice-audit` | voice 自己審査 (AI 臭の検出) | Phase 1 完了直後・ユーザー確認の前 |
+| `lec-content-check` | 内容正確性チェック (数値・概念) | Phase 1 完了直後・ユーザー確認の前 |
+| `examplus` | インタラクティブな事例追加 | 必要に応じて |
+| `brushup` / `visual` | リッチデザイン / ビジュアル一点突破 | 必要に応じて |
+
+## スライド構成の方針 (lec03 で確立 + lec05 で拡張)
 
 - **「身近な現象 → 数式 → 金融への展開 → AI/データサイエンスへの締め」** が骨格。各 PART で「身の回りのもの」を入口に置き、「同じ式は金融でも使える」へ繋ぎ、最後の PART で「同じ式は AI でも動いている」で締める
+- **冒頭に「これまでの振り返り」 スライド (slide-2) を必ず入れる** (lec05 で必須化) — 前回までに学んだ主要グラフ/概念を 3 カードで思い出させる。 詳細は `lec-review-slide` skill 参照
 - **メインの PART を 1-1 / 1-2 に分割するパターンが効く** — 1-1 で身の回りの現象（地図、教室、Wi-Fi 等）で概念を導入、1-2 でその発想を金融題材（リスクリターン散布図等）に転用する。1 つの式の射程が広いことを体感させる
-- **最後の PART は AI / データサイエンスのリッチなインタラクティブで締める** — 距離 → 似ている度 のような形で、Spotify 風カードグリッド、SVG 顔認証など 2-3 スライド分のリッチ実装。座標にこだわりすぎず、シミュレーションとしての面白さを優先する
+- **最後の PART は AI / データサイエンスのリッチなインタラクティブで締める** — 距離 → 似ている度 のような形で、Spotify 風カードグリッド、SVG 顔認証、 Lissajous 図形など 2-3 スライド分のリッチ実装。座標にこだわりすぎず、シミュレーションとしての面白さを優先する
+- **(オプション) 最終 PART に「提出課題」 セクション (`submit-box`) を入れる** — Gemini と協働して Canvas/HTML 作品を制作する課題 (lec05 PART 5 で導入)
+- **SUMMARY は FLOW 図 + 3 つの統一原理 (`principle-card` × 3) で締める**
 - **NEXT スライド（次回予告）は作らない** — SUMMARY で締める。次回の内容を縛るとフローが固くなるので不要
+
+## voice ルール (既存メモリ参照)
+
+講義スライドの voice は以下のメモリに従う。 `lec-voice-audit` skill が自動チェック:
+
+- [feedback_no_ai_tone_in_lectures](../../../../../.claude/projects/-Users-mikiokofune-my-company/memory/feedback_no_ai_tone_in_lectures.md): AI 臭・スローガン調・大主語+抽象動詞メタファー (「世界を書く」 等) の禁止
+- [feedback_natural_spoken_japanese_for_lectures](../../../../../.claude/projects/-Users-mikiokofune-my-company/memory/feedback_natural_spoken_japanese_for_lectures.md): 命令形/体言止め/「君ら+演出動詞」 NG、 「皆さん」+ 中立動詞・宣言文へ
+- [feedback_column_abstract_verbs](../../../../../.claude/projects/-Users-mikiokofune-my-company/memory/feedback_column_abstract_verbs.md): 「立ち上がる」 等の抽象動詞メタファー禁止
+
+## 内容正確性チェック (lec05 で確立)
+
+`lec-content-check` skill が自動チェック:
+
+- **数値ミス**: 例題の答え、 統計値、 物理量を手計算で検算
+- **概念混同**: 「中心 C ≠ データの算術平均」 など (lec05 で実例: sin フィット中心 16.1℃ vs 年間平均 15.8℃)
+- **パラメータ漏れ**: SUMMARY の「○つで記述できる」 が本文の式と一致するか (lec05 で実例: 「振幅 A・周期 T・位相 φ の 3 つ」 と書いたが、 中心 C を含めて 4 つが正しい)
+- **用語統一**: PART 4「重ね合わせ」 vs SUMMARY「足し合わせ」 のような表記揺れ
+- **語りの整合**: 「観覧車のときと同じ 3 つ」 と書いたら、 実際に同じ 3 つか確認
 
 ## Google スプレッドシート前提の表記方針
 
